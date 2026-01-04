@@ -13,8 +13,9 @@ namespace Breakout.Entities
             Name = "Paddle";
             Position = position;
 
-            // Collision shape
+            // Collision shape offset to center of the visual rect
             var collisionShape = new CollisionShape2D();
+            collisionShape.Position = size / 2;
             collisionShape.Shape = new RectangleShape2D { Size = size };
             AddChild(collisionShape);
 

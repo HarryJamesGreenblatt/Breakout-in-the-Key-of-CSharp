@@ -38,17 +38,18 @@ namespace Breakout.Entities
         /// <param name="color"></param>
         public Ball(Vector2 position, Vector2 size, Vector2 initialVelocity, Color color)
         {
-            Position = position;
+            Position = position; // Top-left corner, like everything else
             initialPosition = position;
             this.initialVelocity = initialVelocity;
             velocity = initialVelocity;
 
-            // Collision shape
+            // Collision shape offset to center of the visual rect
             var collisionShape = new CollisionShape2D();
+            collisionShape.Position = size / 2;
             collisionShape.Shape = new CircleShape2D { Radius = size.X / 2 };
             AddChild(collisionShape);
 
-            // Visual representation
+            // Visual at node origin (top-left)
             var visual = new ColorRect
             {
                 Size = size,
@@ -68,8 +69,9 @@ namespace Breakout.Entities
         /// </summary>
         public override void _Ready()
         {
-            // Connect collision signal
+            // Connect area enter/exit signals for paddle collision detection
             AreaEntered += _OnAreaEntered;
+            AreaExited += _OnAreaExited;
         }
 
         /// <summary>
@@ -81,32 +83,22 @@ namespace Breakout.Entities
             // Update position based on velocity
             Position += velocity * (float)delta;
 
-            // Bounce off left/right walls (check if ball center crosses wall boundaries)
-            if (Position.X + GameConfig.Ball.BounceMarginX < GameConfig.WallThickness)
+            float ballRadius = GameConfig.Ball.Size.X / 2;
+            
+            // Bounce off left/right walls (Position is top-left, check against radius)
+            if (Position.X + ballRadius < GameConfig.WallThickness)
             {
                 velocity.X = -velocity.X;
             }
-            else if (Position.X + GameConfig.Ball.BounceMarginX > GameConfig.ViewportWidth - GameConfig.WallThickness)
+            else if (Position.X + ballRadius > GameConfig.ViewportWidth - GameConfig.WallThickness)
             {
                 velocity.X = -velocity.X;
             }
 
             // Bounce off ceiling
-            if (Position.Y + GameConfig.Ball.BounceMarginTop < GameConfig.WallThickness)
+            if (Position.Y + ballRadius < GameConfig.WallThickness)
             {
                 velocity.Y = -velocity.Y;
-            }
-
-            // Check for continuous paddle collision (prevents tunneling)
-            var overlappingAreas = GetOverlappingAreas();
-            foreach (var area in overlappingAreas)
-            {
-                if (area is Paddle)
-                {
-                    velocity.Y = -velocity.Y;
-                    EmitSignal(SignalName.BallHitPaddle);
-                    break;
-                }
             }
 
             // Out of bounds (below paddle)
@@ -118,15 +110,27 @@ namespace Breakout.Entities
         }
 
         /// <summary>
-        /// Defines behavior when the ball collides with another area (e.g., paddle).
+        /// Handles paddle collision when the ball enters the paddle's area.
+        /// Fires only once per contact due to AreaEntered signal semantics.
         /// </summary>
-        /// <param name="area"></param>
         private void _OnAreaEntered(Area2D area)
         {
             if (area is Paddle)
             {
                 velocity.Y = -velocity.Y;
                 EmitSignal(SignalName.BallHitPaddle);
+            }
+        }
+
+        /// <summary>
+        /// Handles paddle exit—used to reset collision state (for future multi-paddle scenarios).
+        /// </summary>
+        private void _OnAreaExited(Area2D area)
+        {
+            // Currently unused, but signals clean separation from paddle
+            if (area is Paddle)
+            {
+                // Ball has left paddle contact
             }
         }
 
