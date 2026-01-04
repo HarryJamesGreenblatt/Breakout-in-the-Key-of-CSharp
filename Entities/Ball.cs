@@ -3,81 +3,121 @@ using Godot;
 namespace Breakout.Entities
 {
     /// <summary>
-    /// A Ball class that represents the ball entity in the Breakout game.
+    /// Ball entity with physics simulation, collision detection, and signals.
+    /// Parametrized for position, size, velocity, and color.
     /// </summary>
     public partial class Ball : Area2D
     {
-
         #region Signals
+        /// <summary>
+        /// Triggered when the ball hits the paddle.
+        /// </summary>
         [Signal]
         public delegate void BallHitPaddleEventHandler();
 
+        /// <summary>
+        /// Triggered when the ball goes out of bounds (below the paddle).
+        /// </summary>
         [Signal]
         public delegate void BallOutOfBoundsEventHandler();
         #endregion
 
+        #region Physics Properties
+        private Vector2 velocity;
+        private Vector2 initialVelocity;
+        private Vector2 initialPosition;
+        #endregion
 
-        private Vector2 velocity = new Vector2(200, -200);
+        #region Constructor
+        /// <summary>
+        /// Default constructor for Ball.
+        /// </summary>
+        /// <param name="position"></param>
+        /// <param name="size"></param>
+        /// <param name="initialVelocity"></param>
+        /// <param name="color"></param>
+        public Ball(Vector2 position, Vector2 size, Vector2 initialVelocity, Color color)
+        {
+            Position = position;
+            initialPosition = position;
+            this.initialVelocity = initialVelocity;
+            velocity = initialVelocity;
 
-        public Ball()
-        {
-            Name = "Ball";
-            Position = new Vector2(400, 300);
-        }
-        public override void _Ready()
-        {
-            // create CollisionShape2D for the ball
+            // Collision shape
             var collisionShape = new CollisionShape2D();
-
-            // assign CircleShape2D to the collision shape 
-            // with a radius of 10
-            collisionShape.Shape = new CircleShape2D {Radius = 10};
-
-            // add the ball's collision shape to the scene tree
+            collisionShape.Shape = new CircleShape2D { Radius = size.X / 2 };
             AddChild(collisionShape);
 
-            // Connect Area2D's area_entered signal
-            AreaEntered += _OnAreaEntered;
-
+            // Visual representation
+            var visual = new ColorRect
+            {
+                Size = size,
+                Color = color
+            };
+            AddChild(visual);
         }
+        #endregion
+
+        /// <summary>
+        /// Sets up the ball entity by connecting collision signals.
+        /// </summary>
+        public override void _Ready()
+        {
+            // Connect collision signal
+            AreaEntered += _OnAreaEntered;
+        }
+
+        /// <summary>
+        /// Updates the ball's position and handles collisions with walls and paddle.
+        /// </summary>
+        /// <param name="delta"></param>
         public override void _Process(double delta)
         {
-            // update ball position based on velocity
+            // Update position based on velocity
             Position += velocity * (float)delta;
 
-            // Constrain within bounds
+            // Bounce off left/right walls
             if (Position.X < 10 || Position.X > 790)
             {
-                velocity.X = -velocity.X; // reverse X velocity on wall collision
+                velocity.X = -velocity.X;
             }
 
+            // Bounce off ceiling
             if (Position.Y < 10)
             {
-                velocity.Y = -velocity.Y; // reverse Y velocity on ceiling collision
+                velocity.Y = -velocity.Y;
             }
 
+            // Out of bounds (below paddle) — game over
             if (Position.Y > 600)
             {
-                // Ball is out of bounds (below the paddle)
                 EmitSignal(SignalName.BallOutOfBounds);
-
-                // Reset ball position
-                Position = new Vector2(400, 300);
-                velocity = new Vector2(200, -200);
+                ResetBall();
             }
-
         }
 
-        public void _OnAreaEntered(Area2D area)
+        /// <summary>
+        /// Defines behavior when the ball collides with another area (e.g., paddle).
+        /// </summary>
+        /// <param name="area"></param>
+        private void _OnAreaEntered(Area2D area)
         {
             if (area is Paddle)
             {
-                // Reverse Y velocity on paddle collision
                 velocity.Y = -velocity.Y;
-
-                // Emit signal for ball hitting paddle
                 EmitSignal(SignalName.BallHitPaddle);
             }
+        }
+
+        /// <summary>
+        /// Resets the ball to its initial position and velocity.
+        /// </summary>
+        /// <remarks>Call this method to return the ball to its starting state, typically after a point is
+        /// scored or to restart play.</remarks>
+        private void ResetBall()
+        {
+            Position = initialPosition;
+            velocity = initialVelocity;
         }
     }
 }

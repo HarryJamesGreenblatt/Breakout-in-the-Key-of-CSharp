@@ -3,41 +3,45 @@ using Godot;
 namespace Breakout.Infrastructure
 {
     /// <summary>
-    /// A Walls class that represents the walls of the Breakout game area.
+    /// Container for immobile boundary walls (left, right, top).
+    /// Creates walls programmatically with collision and visual components.
     /// </summary>
     public partial class Walls : Node
     {
-
-        /// <summary>
-        /// Defines a Wall as a StaticBody2D representing a wall in the game.
-        /// Accepts parameters for nameposition, and size.
-        /// </summary>
-        public partial class Wall : StaticBody2D
+        private partial class Wall : StaticBody2D
         {
-            public Wall(string name, Vector2 position, Vector2 size)
+            public Wall(string name, Vector2 position, Vector2 size, Color color)
             {
                 Name = name;
                 Position = position;
-                var collisionShape = new CollisionShape2D();
-                var rectangleShape = new RectangleShape2D();
-                rectangleShape.Size = size;
-                collisionShape.Shape = rectangleShape;
-                AddChild(collisionShape);
-            }
 
+                // Collision shape
+                var collisionShape = new CollisionShape2D();
+                collisionShape.Shape = new RectangleShape2D { Size = size };
+                AddChild(collisionShape);
+
+                // Visual representation
+                var visual = new ColorRect
+                {
+                    Size = size,
+                    Color = color
+                };
+                AddChild(visual);
+            }
         }
 
         public override void _Ready()
         {
-            // Create walls for the game area
-            var leftWall = new Wall("LeftWall", new Vector2(0, 300), new Vector2(20, 600));
-            var rightWall = new Wall("RightWall", new Vector2(800, 300), new Vector2(20, 600));
-            var topWall = new Wall("TopWall", new Vector2(400, 0), new Vector2(800, 20));
+            // Create boundary walls
+            var color = new Color(0.5f, 0.5f, 0.5f, 1); // Gray
+
+            var leftWall = new Wall("LeftWall", new Vector2(0, 300), new Vector2(20, 600), color);
+            var rightWall = new Wall("RightWall", new Vector2(800, 300), new Vector2(20, 600), color);
+            var topWall = new Wall("TopWall", new Vector2(400, 0), new Vector2(800, 20), color);
 
             AddChild(leftWall);
             AddChild(rightWall);
             AddChild(topWall);
-
         }
     }
 }
