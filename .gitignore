@@ -2,8 +2,16 @@
 .godot/
 /android/
 
+# Godot metadata (auto-generated)
+*.uid
+*.import
+
 # Context/notes (local development reference)
 .context/
 
 # Visual Studio cache
 .vs/
+
+# C# project files (optional, but good to ignore IDE noise)
+.csproj.user
+*.DotSettings.user
