@@ -1,11 +1,11 @@
 using Godot;
 
-namespace Breakout
+namespace Breakout.Game
 {
     /// <summary>
     /// Centralized game configuration. All magic numbers, constants, and tunable values here.
     /// </summary>
-    public static class GameConfig
+    public static class Config
     {
         #region Viewport Dimensions
         public const float ViewportWidth = 800f;

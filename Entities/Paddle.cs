@@ -1,3 +1,4 @@
+using Breakout.Game;
 using Godot;
 
 namespace Breakout.Entities
@@ -28,8 +29,8 @@ namespace Breakout.Entities
             AddChild(visual);
 
             // Collision setup from config
-            CollisionLayer = GameConfig.Paddle.CollisionLayer;
-            CollisionMask = GameConfig.Paddle.CollisionMask;
+            CollisionLayer = Config.Paddle.CollisionLayer;
+            CollisionMask = Config.Paddle.CollisionMask;
         }
 
         public override void _Ready()
@@ -46,11 +47,11 @@ namespace Breakout.Entities
             var input = Input.GetAxis("ui_left", "ui_right");
             
             // Update position
-            Position += new Vector2((float)(GameConfig.Paddle.Speed * input * delta), 0);
+            Position += new Vector2((float)(Config.Paddle.Speed * input * delta), 0);
             
             // Constrain to bounds
             Position = new Vector2(
-                Mathf.Clamp(Position.X, GameConfig.Paddle.MinX, GameConfig.Paddle.MaxX),
+                Mathf.Clamp(Position.X, Config.Paddle.MinX, Config.Paddle.MaxX),
                 Position.Y
             );
         }

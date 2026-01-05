@@ -3,13 +3,13 @@ using Breakout.Entities;
 using Breakout.Infrastructure;
 using System.Collections.Generic;
 
-namespace Breakout
+namespace Breakout.Game
 {
     /// <summary>
     /// Game orchestrator: manages entities, signals, and game loop.
     /// Responsible for instantiation, signal binding, and overall game state.
     /// </summary>
-    public partial class GameOrchestrator : Node2D
+    public partial class Orchestrator : Node2D
     {
         #region Game State
         private Dictionary<int, Brick> brickGrid = new();
@@ -20,17 +20,17 @@ namespace Breakout
         {
             // Instantiate entities using GameConfig
             var paddle = new Paddle(
-                GameConfig.Paddle.Position,
-                GameConfig.Paddle.Size,
-                GameConfig.Paddle.Color
+                Config.Paddle.Position,
+                Config.Paddle.Size,
+                Config.Paddle.Color
             );
             AddChild(paddle);
 
             var ball = new Ball(
-                GameConfig.Ball.Position,
-                GameConfig.Ball.Size,
-                GameConfig.Ball.Velocity,
-                GameConfig.Ball.Color
+                Config.Ball.Position,
+                Config.Ball.Size,
+                Config.Ball.Velocity,
+                Config.Ball.Color
             );
             AddChild(ball);
 
@@ -66,19 +66,19 @@ namespace Breakout
         private void InstantiateBrickGrid()
         {
             int brickId = 0;
-            Vector2 gridStart = GameConfig.Brick.GridStartPosition;
+            Vector2 gridStart = Config.Brick.GridStartPosition;
 
-            for (int row = 0; row < GameConfig.Brick.GridRows; row++)
+            for (int row = 0; row < Config.Brick.GridRows; row++)
             {
-                for (int col = 0; col < GameConfig.Brick.GridColumns; col++)
+                for (int col = 0; col < Config.Brick.GridColumns; col++)
                 {
                     Vector2 position = gridStart + new Vector2(
-                        col * GameConfig.Brick.GridSpacingX,
-                        row * GameConfig.Brick.GridSpacingY
+                        col * Config.Brick.GridSpacingX,
+                        row * Config.Brick.GridSpacingY
                     );
 
-                    Color color = GameConfig.Brick.RowColors[row];
-                    var brick = new Brick(brickId, position, GameConfig.Brick.Size, color);
+                    Color color = Config.Brick.RowColors[row];
+                    var brick = new Brick(brickId, position, Config.Brick.Size, color);
 
                     AddChild(brick);
                     brickGrid[brickId] = brick;

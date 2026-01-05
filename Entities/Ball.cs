@@ -1,3 +1,4 @@
+using Breakout.Game;
 using Godot;
 
 namespace Breakout.Entities
@@ -58,8 +59,8 @@ namespace Breakout.Entities
             AddChild(visual);
 
             // Collision setup from config
-            CollisionLayer = GameConfig.Ball.CollisionLayer;
-            CollisionMask = GameConfig.Ball.CollisionMask;
+            CollisionLayer = Config.Ball.CollisionLayer;
+            CollisionMask = Config.Ball.CollisionMask;
         }
         #endregion
 
@@ -83,14 +84,14 @@ namespace Breakout.Entities
             // Update position based on velocity
             Position += velocity * (float)delta;
 
-            float ballRadius = GameConfig.Ball.Size.X / 2;
+            float ballRadius = Config.Ball.Size.X / 2;
             
             // Bounce off left/right walls (walls now positioned outside viewport at x=0 and x=ViewportWidth)
             if (Position.X + ballRadius < 0)
             {
                 velocity.X = -velocity.X;
             }
-            else if (Position.X + ballRadius > GameConfig.ViewportWidth)
+            else if (Position.X + ballRadius > Config.ViewportWidth)
             {
                 velocity.X = -velocity.X;
             }
@@ -102,7 +103,7 @@ namespace Breakout.Entities
             }
 
             // Out of bounds (below paddle)
-            if (Position.Y > GameConfig.Ball.OutOfBoundsY)
+            if (Position.Y > Config.Ball.OutOfBoundsY)
             {
                 EmitSignal(SignalName.BallOutOfBounds);
                 ResetBall();
@@ -124,16 +125,16 @@ namespace Breakout.Entities
             {
                 // Bounce logic based on which edge of the brick was hit
                 // Get ball and brick bounds
-                Vector2 ballCenter = Position + GameConfig.Ball.Size / 2;
+                Vector2 ballCenter = Position + Config.Ball.Size / 2;
                 Vector2 brickSize = brick.GetBrickSize();
                 Vector2 brickCenter = brick.Position + brickSize / 2;
                 
                 // Calculate which edge is closest
                 Vector2 delta = ballCenter - brickCenter;
-                float overlapLeft = (brickSize.X / 2) + (GameConfig.Ball.Size.X / 2) + delta.X;
-                float overlapRight = (brickSize.X / 2) + (GameConfig.Ball.Size.X / 2) - delta.X;
-                float overlapTop = (brickSize.Y / 2) + (GameConfig.Ball.Size.Y / 2) + delta.Y;
-                float overlapBottom = (brickSize.Y / 2) + (GameConfig.Ball.Size.Y / 2) - delta.Y;
+                float overlapLeft = (brickSize.X / 2) + (Config.Ball.Size.X / 2) + delta.X;
+                float overlapRight = (brickSize.X / 2) + (Config.Ball.Size.X / 2) - delta.X;
+                float overlapTop = (brickSize.Y / 2) + (Config.Ball.Size.Y / 2) + delta.Y;
+                float overlapBottom = (brickSize.Y / 2) + (Config.Ball.Size.Y / 2) - delta.Y;
                 
                 // Find the smallest overlap to determine which edge was hit
                 float minOverlap = Mathf.Min(Mathf.Min(overlapLeft, overlapRight), Mathf.Min(overlapTop, overlapBottom));

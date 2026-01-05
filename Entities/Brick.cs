@@ -1,3 +1,4 @@
+using Breakout.Game;
 using Godot;
 
 namespace Breakout.Entities
@@ -55,8 +56,8 @@ namespace Breakout.Entities
             AddChild(visual);
 
             // Collision setup from config
-            CollisionLayer = GameConfig.Brick.CollisionLayer;
-            CollisionMask = GameConfig.Brick.CollisionMask;
+            CollisionLayer = Config.Brick.CollisionLayer;
+            CollisionMask = Config.Brick.CollisionMask;
         }
         #endregion
 

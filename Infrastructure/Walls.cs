@@ -1,3 +1,4 @@
+using Breakout.Game;
 using Godot;
 
 namespace Breakout.Infrastructure
@@ -43,8 +44,8 @@ namespace Breakout.Infrastructure
                 AddChild(visual);
 
                 // Collision setup from config
-                CollisionLayer = GameConfig.Walls.CollisionLayer;
-                CollisionMask = GameConfig.Walls.CollisionMask;
+                CollisionLayer = Config.Walls.CollisionLayer;
+                CollisionMask = Config.Walls.CollisionMask;
             }
         }
         #endregion
@@ -54,17 +55,17 @@ namespace Breakout.Infrastructure
         {
             // Create boundary walls using GameConfig
             // Walls positioned outside viewport; inner edges define play boundary
-            var topWallSize = new Vector2(GameConfig.ViewportWidth, GameConfig.WallThickness);
-            var verticalWallSize = new Vector2(GameConfig.WallThickness, GameConfig.ViewportHeight);
+            var topWallSize = new Vector2(Config.ViewportWidth, Config.WallThickness);
+            var verticalWallSize = new Vector2(Config.WallThickness, Config.ViewportHeight);
 
             // Top wall: positioned above viewport (y = -thickness), inner edge at y=0
-            var topWall = new Wall("TopWall", new Vector2(0, -GameConfig.WallThickness), topWallSize, topWallSize / 2, GameConfig.Walls.Color);
+            var topWall = new Wall("TopWall", new Vector2(0, -Config.WallThickness), topWallSize, topWallSize / 2, Config.Walls.Color);
             
             // Left wall: positioned left of viewport (x = -thickness), inner edge at x=0
-            var leftWall = new Wall("LeftWall", new Vector2(-GameConfig.WallThickness, 0), verticalWallSize, verticalWallSize / 2, GameConfig.Walls.Color);
+            var leftWall = new Wall("LeftWall", new Vector2(-Config.WallThickness, 0), verticalWallSize, verticalWallSize / 2, Config.Walls.Color);
             
             // Right wall: positioned at viewport right edge, inner edge at x=ViewportWidth
-            var rightWall = new Wall("RightWall", new Vector2(GameConfig.ViewportWidth, 0), verticalWallSize, verticalWallSize / 2, GameConfig.Walls.Color);
+            var rightWall = new Wall("RightWall", new Vector2(Config.ViewportWidth, 0), verticalWallSize, verticalWallSize / 2, Config.Walls.Color);
 
             AddChild(topWall);
             AddChild(leftWall);
