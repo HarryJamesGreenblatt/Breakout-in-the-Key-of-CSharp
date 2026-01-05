@@ -120,6 +120,37 @@ namespace Breakout.Entities
                 velocity.Y = -velocity.Y;
                 EmitSignal(SignalName.BallHitPaddle);
             }
+            else if (area is Brick brick)
+            {
+                // Bounce logic based on which edge of the brick was hit
+                // Get ball and brick bounds
+                Vector2 ballCenter = Position + GameConfig.Ball.Size / 2;
+                Vector2 brickSize = brick.GetBrickSize();
+                Vector2 brickCenter = brick.Position + brickSize / 2;
+                
+                // Calculate which edge is closest
+                Vector2 delta = ballCenter - brickCenter;
+                float overlapLeft = (brickSize.X / 2) + (GameConfig.Ball.Size.X / 2) + delta.X;
+                float overlapRight = (brickSize.X / 2) + (GameConfig.Ball.Size.X / 2) - delta.X;
+                float overlapTop = (brickSize.Y / 2) + (GameConfig.Ball.Size.Y / 2) + delta.Y;
+                float overlapBottom = (brickSize.Y / 2) + (GameConfig.Ball.Size.Y / 2) - delta.Y;
+                
+                // Find the smallest overlap to determine which edge was hit
+                float minOverlap = Mathf.Min(overlapLeft, overlapRight, overlapTop, overlapBottom);
+                
+                if (minOverlap == overlapTop || minOverlap == overlapBottom)
+                {
+                    // Hit top or bottom edge
+                    velocity.Y = -velocity.Y;
+                    GD.Print($"Bounce off brick (vertical)");
+                }
+                else
+                {
+                    // Hit left or right edge
+                    velocity.X = -velocity.X;
+                    GD.Print($"Bounce off brick (horizontal)");
+                }
+            }
         }
 
         /// <summary>
