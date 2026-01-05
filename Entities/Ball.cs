@@ -136,7 +136,7 @@ namespace Breakout.Entities
                 float overlapBottom = (brickSize.Y / 2) + (GameConfig.Ball.Size.Y / 2) - delta.Y;
                 
                 // Find the smallest overlap to determine which edge was hit
-                float minOverlap = Mathf.Min(overlapLeft, overlapRight, overlapTop, overlapBottom);
+                float minOverlap = Mathf.Min(Mathf.Min(overlapLeft, overlapRight), Mathf.Min(overlapTop, overlapBottom));
                 
                 if (minOverlap == overlapTop || minOverlap == overlapBottom)
                 {
