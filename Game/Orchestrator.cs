@@ -1,6 +1,7 @@
 using Godot;
 using Breakout.Entities;
 using Breakout.Infrastructure;
+using Breakout.Models;
 using System.Collections.Generic;
 
 namespace Breakout.Game

@@ -1,6 +1,6 @@
 using Godot;
 
-namespace Breakout.Game
+namespace Breakout.Models
 {
     /// <summary>
     /// Enumeration of brick colors matching canonical Breakout design.
