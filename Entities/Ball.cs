@@ -33,6 +33,13 @@ namespace Breakout.Entities
         /// </summary>
         [Signal]
         public delegate void BallOutOfBoundsEventHandler();
+
+        /// <summary>
+        /// Triggered when the ball hits the ceiling (upper wall).
+        /// Forwarded from PhysicsComponent.CeilingHit.
+        /// </summary>
+        [Signal]
+        public delegate void BallHitCeilingEventHandler();
         #endregion
 
         #region State
@@ -99,6 +106,10 @@ namespace Breakout.Entities
             {
                 EmitSignal(SignalName.BallOutOfBounds);
             };
+            physics.CeilingHit += () =>
+            {
+                EmitSignal(SignalName.BallHitCeiling);
+            };
 
             // Connect area enter/exit signals to physics component
             AreaEntered += (area) => physics.HandleCollisionEnter((Area2D)area);
@@ -121,6 +132,25 @@ namespace Breakout.Entities
             // Delegate all physics to component
             // Component updates position, handles walls, detects out-of-bounds, emits events
             Position = physics.Update((float)delta);
+        }
+
+        /// <summary>
+        /// Applies a speed multiplier to the ball's velocity.
+        /// Called by Orchestrator when canonical speed increase rules trigger.
+        /// </summary>
+        public void ApplySpeedMultiplier(float multiplier)
+        {
+            physics.ApplySpeedMultiplier(multiplier);
+        }
+
+        /// <summary>
+        /// Connects paddle to ceiling hit signal.
+        /// Called by Orchestrator during setup.
+        /// Wraps paddle.OnBallHitCeiling() which returns bool (did shrink).
+        /// </summary>
+        public void ConnectPaddleToCeiling(Paddle paddle)
+        {
+            BallHitCeiling += () => paddle.OnBallHitCeiling();
         }
         #endregion
     }

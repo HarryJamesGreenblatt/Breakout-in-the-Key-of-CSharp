@@ -11,6 +11,13 @@ namespace Breakout.Entities
     {
         private Vector2 size;
 
+        /// <summary>
+        /// Flag set when ball breaks through red row.
+        /// When set, paddle shrinks on next ceiling hit.
+        /// Only shrinks once.
+        /// </summary>
+        private bool shrinkOnCeilingHit = false;
+
         public Paddle(Vector2 position, Vector2 size, Color color)
         {
             Name = "Paddle";
@@ -63,5 +70,55 @@ namespace Breakout.Entities
         /// Returns the size of the paddle.
         /// </summary>
         public Vector2 GetSize() => size;
+
+        /// <summary>
+        /// Sets flag to shrink paddle on next ceiling hit.
+        /// Called by Orchestrator when red row brick is destroyed.
+        /// </summary>
+        public void SetShrinkOnCeilingHit()
+        {
+            shrinkOnCeilingHit = true;
+        }
+
+        /// <summary>
+        /// Handles ceiling hit signal from ball.
+        /// If paddle is flagged to shrink, shrinks to 50% and clears flag.
+        /// Returns true if shrink occurred, false otherwise.
+        /// </summary>
+        public bool OnBallHitCeiling()
+        {
+            if (shrinkOnCeilingHit)
+            {
+                ShrinkPaddle();
+                shrinkOnCeilingHit = false;  // Only shrink once
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Shrinks the paddle to 50% of its original width.
+        /// Called when ball breaks through red row and hits ceiling (canonical Breakout rule).
+        /// </summary>
+        private void ShrinkPaddle()
+        {
+            size = new Vector2(size.X * 0.5f, size.Y);
+            
+            // Update visual
+            var visual = GetChild(1) as ColorRect;  // ColorRect is second child (after CollisionShape2D)
+            if (visual != null)
+            {
+                visual.Size = size;
+            }
+
+            // Update collision shape
+            var collisionShape = GetChild(0) as CollisionShape2D;  // CollisionShape2D is first child
+            if (collisionShape != null)
+            {
+                collisionShape.Shape = new RectangleShape2D { Size = size };
+            }
+
+            GD.Print($"Paddle shrunk to {size.X}x{size.Y}");
+        }
     }
 }

@@ -4,26 +4,31 @@ using Godot;
 namespace Breakout.Entities
 {
     /// <summary>
-    /// Brick entity that can be destroyed by ball collision.
-    /// Uses signals to notify the orchestrator when hit.
+    /// Brick entity — destructible on ball collision.
+    /// Canonical Breakout: all bricks destroyed in one hit.
+    /// No health component needed (follows original ruleset exactly).
     /// </summary>
     public partial class Brick : Area2D
     {
         #region Signals
         /// <summary>
         /// Triggered when the brick is destroyed.
-        /// Passes the brick's unique ID for grid management.
+        /// Passes the brick's unique ID for orchestration.
         /// </summary>
         [Signal]
         public delegate void BrickDestroyedEventHandler(int brickId);
         #endregion
 
-        #region Properties
+        #region State
+        /// <summary>
+        /// Unique identifier for this brick in the grid.
+        /// </summary>
         private int brickId;
-        private int health = 1;  // Number of hits to destroy
-        private Vector2 size;    // Store size for collision detection
 
-        public int BrickId => brickId;
+        /// <summary>
+        /// Brick size (needed for collision calculations).
+        /// </summary>
+        private Vector2 size;
         #endregion
 
         #region Constructor
@@ -79,20 +84,18 @@ namespace Breakout.Entities
         }
 
         /// <summary>
-        /// Handles collision with the ball.
+        /// Handles collision with the ball — destroy on contact.
+        /// Canonical Breakout: one hit = destruction (no health component).
         /// </summary>
         private void _OnAreaEntered(Area2D area)
         {
             if (area is Ball)
             {
-                health--;
-                if (health <= 0)
-                {
-                    EmitSignal(SignalName.BrickDestroyed, brickId);
-                    QueueFree();  // Schedule for deletion at end of frame
-                }
+                EmitSignal(SignalName.BrickDestroyed, brickId);
+                QueueFree();  // Schedule for deletion at end of frame
             }
         }
         #endregion
     }
 }
+

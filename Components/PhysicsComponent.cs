@@ -31,6 +31,12 @@ namespace Breakout.Components
         /// C# event emitted when ball goes out of bounds. Allows Ball to reset and emit BallOutOfBounds signal.
         /// </summary>
         public event System.Action OutOfBounds;
+
+        /// <summary>
+        /// C# event emitted when ball hits ceiling (upper wall).
+        /// Allows game rules to respond (e.g., paddle shrink after red row contact).
+        /// </summary>
+        public event System.Action CeilingHit;
         #endregion
 
         #region State
@@ -43,6 +49,14 @@ namespace Breakout.Components
         /// Initial velocity (used for reset).
         /// </summary>
         private Vector2 initialVelocity;
+
+        /// <summary>
+        /// Cumulative speed multiplier (persists across ball resets).
+        /// Starts at 1.0, multiplied by speed increase factors.
+        /// When ball resets, velocity = initialVelocity * currentSpeedMultiplier.
+        /// This ensures speed increases are persistent and don't reset.
+        /// </summary>
+        private float currentSpeedMultiplier = 1.0f;
 
         /// <summary>
         /// Ball size (needed for radius calculations in bounce logic).
@@ -122,12 +136,15 @@ namespace Breakout.Components
 
         /// <summary>
         /// Resets position and velocity to initial values.
+        /// Preserves cumulative speed multiplier so speed increases persist across ball resets.
+        /// velocity = initialVelocity * currentSpeedMultiplier
         /// </summary>
         public void ResetPhysics()
         {
             position = initialPosition;
-            velocity = initialVelocity;
+            velocity = initialVelocity * currentSpeedMultiplier;
             activeCollisions.Clear();
+            GD.Print($"Ball reset. Speed multiplier: {currentSpeedMultiplier}x");
         }
         #endregion
 
@@ -187,6 +204,7 @@ namespace Breakout.Components
             if (position.Y + ballRadius < 0)
             {
                 velocity.Y = -velocity.Y;
+                CeilingHit?.Invoke();  // Emit event for game rules
             }
         }
         #endregion
@@ -214,9 +232,11 @@ namespace Breakout.Components
             const float maxSteerFactor = 0.6f;
             velocity.X = speedMagnitude * maxSteerFactor * normalizedX;
 
-            // Boost velocity magnitude for impactful bounce (10% faster)
-            const float bounceBoost = 1.1f;
-            velocity = velocity.Normalized() * (speedMagnitude * bounceBoost);
+            // NOTE: Do NOT apply speed boost here. Speed increases follow canonical ruleset:
+            // - After 4 brick hits (4 hit milestone)
+            // - After 12 brick hits (12 hit milestone)
+            // - After ball contacts orange or red rows
+            // These are managed by Orchestrator, not by physics engine.
 
             GD.Print($"Paddle bounce: contact={normalizedX:F2}, vel={velocity}");
         }
@@ -266,8 +286,9 @@ namespace Breakout.Components
         /// </summary>
         public void ApplySpeedMultiplier(float factor)
         {
-            velocity *= factor;
-            GD.Print($"Speed multiplier applied: {factor}x, new velocity={velocity}");
+            currentSpeedMultiplier *= factor;
+            velocity = initialVelocity * currentSpeedMultiplier;
+            GD.Print($"Speed multiplier applied: {factor}x, cumulative: {currentSpeedMultiplier}x, new velocity={velocity}");
         }
         #endregion
     }
