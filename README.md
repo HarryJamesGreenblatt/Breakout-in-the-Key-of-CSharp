@@ -2,7 +2,7 @@
 
 A faithful recreation of Atari's classic *Breakout* (1976) in **Godot 4.5 with C#**, built as a hands-on learning exercise in 2D game development fundamentals and architectural patterns.
 
-**Current Status:** MVP complete (Objective 1.1) — playable end-to-end with basic physics.
+**Current Status:** Objective 1.1 complete (MVP playable) — Nystrom's Component Pattern fully implemented (January 5, 2026).
 
 ---
 
@@ -24,11 +24,12 @@ Rather than providing complete code, this project **implements features iterativ
 ### MVP (Objective 1.1 Complete ✅)
 
 - **Entities:** Paddle (player-controlled), Ball (physics-driven), Brick Grid (8×8, destructible), Walls (boundary)
-- **Gameplay:** Ball bounces off walls, paddle, and bricks; bricks destroyed on contact
+- **Gameplay:** Ball bounces off walls, paddle, and bricks; bricks destroyed on contact; speed increases and paddle shrinking working
 - **Collision Detection:** Signal-based (`AreaEntered`/`AreaExited` events) instead of polling
+- **Components:** PhysicsComponent (ball physics), GameStateComponent (rules & state), BrickGridComponent (grid management), EntityComponent (factory)
 - **Configuration:** Centralized in `Config.cs`; dynamic brick grid spacing
 - **Brick Colors:** Type-safe enum with scoring metadata (Red=7pts, Orange=5pts, Green=3pts, Yellow=1pt)
-- **Architecture:** Self-contained entities communicating via Godot Signals (Observer pattern)
+- **Architecture:** Nystrom's Component Pattern — plain C# components own state & logic; thin entities forward events; pure signal wiring
 
 ### Not Yet Implemented
 
@@ -42,22 +43,39 @@ Rather than providing complete code, this project **implements features iterativ
 
 ## Architecture Notes
 
-### Current Design: Signals + Self-Contained Entities
+### Current Design: Nystrom's Component Pattern
 
-**Pattern:** Update Method + Observer (Godot Signals)
+**Pattern:** Component (plain C# classes owning state + logic) + Observer (Godot Signals + C# Events)
 
-Each entity owns its state and behavior:
-- `Ball._Process()` updates position, detects collisions, bounces
-- `Paddle._Process()` handles input, bounds-checking
-- `GameOrchestrator` manages entity instantiation and signal connections
+**Architecture Layers:**
 
-**Rationale:** Per Nystrom's warning against deep inheritance hierarchies, we use composition and signals to decouple entities.
+1. **Components (Plain C# Classes)** — Own state and logic, emit C# events:
+   - `PhysicsComponent` — Ball velocity, position, collision tracking, speed multipliers, bounce logic
+   - `GameStateComponent` — Score, lives, hit count, speed/shrink decision logic
+   - `BrickGridComponent` — Brick grid management and destruction tracking
+   - `EntityComponent` — Factory for entity-component pair instantiation
 
-### Identified Issue: Physics Logic Duplication
+2. **Entities (Thin Node2D Containers)** — Forward component events to Godot signals:
+   - `Ball` — Delegates to PhysicsComponent; emits `BallHitPaddle`, `BallOutOfBounds`, `BallHitCeiling` signals
+   - `Paddle` — Input handling, movement bounds, `Shrink()` action method
+   - `Brick` — Collision detector; emits `BrickDestroyed` signal
+   - `Walls` — Stateless; boundary nodes only
 
-Bounce logic appears in three places (walls, paddle, bricks), violating DRY. This is **acceptable for MVP** but signals a need for refactoring before adding game rules (speed increases, paddle effects, angle-aware bounces).
+3. **Controller (Pure Signal Wiring)** — Zero business logic:
+   - Instantiates components and entities via `EntityComponent`
+   - Wires C# events to Godot signals to other component methods
+   - No state; no decisions; mechanical coordination only
 
-**Planned Solution (Next Refactor):** Extract `PhysicsComponent` to centralize all bounce and velocity logic. This aligns with Nystrom's **Component** pattern (https://gameprogrammingpatterns.com/component.html).
+**Signal Flow Example:**
+```
+Brick destroyed → BrickGridComponent emits BrickDestroyedWithColor
+                  ↓
+                  GameStateComponent.OnBrickDestroyed() checks milestones
+                  ├─ Emits SpeedIncreaseRequired → Controller wires to Ball.ApplySpeedMultiplier()
+                  └─ Emits PaddleShrinkRequired → Controller wires to Paddle.Shrink()
+```
+
+**Rationale:** Per Nystrom's Component pattern, components own state + behavior. Entities are thin containers. Controller is mechanical wiring. Zero state duplication. Each concern has exactly one owner.
 
 ---
 
@@ -74,13 +92,15 @@ dotnet build
 ```
 
 ### Key Files
-- **Game/Orchestrator.cs** — Main orchestration; creates entities and wires signals
+- **Game/Controller.cs** — Pure signal wiring and instantiation; zero business logic
 - **Game/Config.cs** — All constants; dynamic layout logic
-- **Game/BrickColor.cs** — Brick color enum, scoring config, and row-to-color mapping
-- **Entities/Ball.cs** — Physics, collision detection, bounce logic
-- **Entities/Paddle.cs** — Input handling, movement constraints
-- **Entities/Brick.cs** — Brick state, destruction signals
-- **GameConfig.cs** — All constants; dynamic layout computation
+- **Game/EntityComponent.cs** — Factory component; creates entity-component pairs and manages scene tree
+- **Components/PhysicsComponent.cs** — Ball physics, collision tracking, speed multipliers
+- **Components/GameStateComponent.cs** — Game rules, score, lives, speed/shrink logic
+- **Components/BrickGridComponent.cs** — Brick grid management and destruction tracking
+- **Entities/Ball.cs** — Thin entity; delegates to PhysicsComponent; forwards signals
+- **Entities/Paddle.cs** — Input handling, movement, shrink action
+- **Entities/Brick.cs** — Collision detector, destruction signal
 - **Infrastructure/Walls.cs** — Boundary walls (positioned outside viewport)
 
 ### Git Workflow
@@ -97,11 +117,13 @@ docs: documentation
 
 ## Objectives Roadmap
 
-### Objective 1.1: Scene Structure & Game Loop ✅
-- Scene hierarchy (Orchestrator → Entities)
+### Objective 1.1: Scene Structure & Component Architecture ✅
+- Scene hierarchy (Controller → Entities)
 - Frame-by-frame update loop
-- Basic collision detection
-- **Status:** Complete; MVP playable
+- Component-based architecture with state centralization
+- Zero state duplication
+- Pure signal wiring
+- **Status:** Complete; MVP playable with solid architecture (January 5 refactor)
 
 ### Objective 1.2: Paddle Control ✅
 - Keyboard input (arrow keys)
@@ -146,43 +168,52 @@ docs: documentation
 | Pattern | Link | Usage |
 |---------|------|-------|
 | Update Method | https://gameprogrammingpatterns.com/update-method.html | Entity `_Process()` updates |
-| Game Loop | https://gameprogrammingpatterns.com/game-loop.html | Orchestrator drives loop |
-| Observer | https://gameprogrammingpatterns.com/observer.html | Godot Signals for events |
-| Component | https://gameprogrammingpatterns.com/component.html | Planned: PhysicsComponent |
+| Game Loop | https://gameprogrammingpatterns.com/game-loop.html | Controller drives loop |
+| Observer | https://gameprogrammingpatterns.com/observer.html | C# events & Godot Signals |
+| Component | https://gameprogrammingpatterns.com/component.html | PhysicsComponent, GameStateComponent, BrickGridComponent (implemented) |
+| Factory | https://gameprogrammingpatterns.com/factory-method.html | EntityComponent creates entity-component pairs |
 | Object Pool | https://gameprogrammingpatterns.com/object-pool.html | Brick grid Dictionary |
 
 ---
-Recent Improvements
 
-### BrickColor Enum Refactor (Latest)
+## Recent Improvements
 
-Introduced type-safe color handling:
-- `BrickColor` enum (Red, Orange, Green, Yellow) replaces hardcoded array indices
-- `BrickColorConfig` struct bundles color, visual representation, and scoring
-- `BrickColorDefinitions` helper with `GetColorForRow()` and `GetConfig()` for easy lookup
-- Canonical Breakout scoring now defined: Red=7pts, Orange=5pts, Green=3pts, Yellow=1pt
+### Session 2: Full Component Pattern Refactor (January 5, 2026)
 
-**Impact:** Clean foundation for scoring system implementation. No duplicate color definitions. Easy to extend with new color properties.
+Refactored from "signals only" to true **Nystrom's Component Pattern**:
+- Created `PhysicsComponent` (ball physics, collision tracking, speed multipliers)
+- Created `GameStateComponent` (game rules, score, lives, speed/shrink logic)
+- Created `BrickGridComponent` (grid management, destruction handling)
+- Created `EntityComponent` (factory for entity-component pair instantiation)
+- Renamed `GameOrchestrator` → `Controller` (accurate naming: dumb wiring)
+- Eliminated all state duplication (e.g., shrink logic was in 2 places, now in 1)
+- Controller reduced from 100+ lines with decisions to ~50 lines of pure wiring
+
+**Achieved:**
+- ✅ Components own state AND logic (not just data containers)
+- ✅ Entities are thin; they forward events
+- ✅ Controller is mechanical signal wiring only
+- ✅ Speed multipliers persist across ball resets
+- ✅ Paddle shrinks exactly once (via flag guard)
+- ✅ No state polling; pure event-driven
+
+**Impact:** Architecture is solid and scalable. Ready for Objective 2.1 (scoring/lives UI) without further refactoring.
 
 ---
 
-## 
-## Next Session: Recommended Focus
+## Next Session: Objective 2.1 (Scoring & Game State UI)
 
-### Option A: Refactor to Components (Recommended)
-1. Create `PhysicsComponent` class
-2. Move bounce logic from Ball into component
-3. Enhance bounce to consider paddle velocity and contact point
-4. Wire into Orchestrator for rule modifications (speed increases, etc.)
-5. **Time:** 2-3 hours | **Benefit:** Unblocks all downstream features cleanly
+Architecture is solid and ready for feature addition. No refactoring needed.
 
-### Option B: Continue MVP Features
-1. Add scoring display
-2. Implement hit counter and speed increases
-3. Add lives system
-4. **Time:** 2-3 hours | **Benefit:** Game feels more complete sooner
+### Recommended Tasks
+1. Create UI layer (CanvasLayer with labels)
+2. Bind `ScoreChanged` event to score label
+3. Bind `LivesChanged` event to lives label
+4. Implement game-over detection when lives reach 0
+5. Test speed increases and paddle shrinking
+6. **Time:** 2-3 hours | **Benefit:** Game is playable and testable
 
-**Recommendation:** Option A first. The architectural pain is clear (duplicate bounce logic), and refactoring now prevents larger pain when adding speed/difficulty modifiers.
+**Why architecture is ready:** Components emit all necessary events (ScoreChanged, LivesChanged, BallOutOfBounds). UI can simply listen without any architectural changes.
 
 ---
 

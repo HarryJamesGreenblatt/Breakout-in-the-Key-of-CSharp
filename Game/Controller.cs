@@ -22,14 +22,14 @@ namespace Breakout.Game
         public override void _Ready()
         {
             // Instantiate EntityComponent (responsible for creating entity-component pairs)
-            var entityFactory = new EntityComponent();
+            var entityComponent= new EntityComponent();
 
             // Instantiate all entity-component pairs via EntityComponent (separation of concerns)
-            var gameState = entityFactory.CreateGameState();
-            var brickGrid = entityFactory.CreateBrickGrid(this);
-            var paddle = entityFactory.CreatePaddle(this);
-            var ball = entityFactory.CreateBall(this);
-            var walls = entityFactory.CreateWalls(this);  // For completeness; walls are stateless
+            var gameState = entityComponent.CreateGameState();
+            var brickGrid = entityComponent.CreateBrickGrid(this);
+            var paddle = entityComponent.CreatePaddle(this);
+            var ball = entityComponent.CreateBall(this);
+            var walls = entityComponent.CreateWalls(this);  // For completeness; walls are stateless
 
             // Wire all signals (pure mechanical coordination, zero business logic)
             gameState.SpeedIncreaseRequired += ball.ApplySpeedMultiplier;
