@@ -135,12 +135,15 @@ namespace Breakout.Entities
         }
 
         /// <summary>
+        /// <summary>
         /// Applies a speed multiplier to the ball's velocity.
         /// Called by Orchestrator when canonical speed increase rules trigger.
         /// </summary>
         public void ApplySpeedMultiplier(float multiplier)
         {
             physics.ApplySpeedMultiplier(multiplier);
-        }        #endregion
+        }
+
+        #endregion
     }
 }
