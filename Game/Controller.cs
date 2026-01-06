@@ -8,11 +8,17 @@ using Breakout.Components;
 namespace Breakout.Game
 {
     /// <summary>
-    /// Game orchestrator: coordinates entities, signals, and game loop.
-    /// Responsible for instantiation and signal binding only.
-    /// Game state is owned by GameStateComponent (following Nystrom's pattern).
+    /// Game controller: purely mechanical signal wiring and instantiation.
+    /// No business logic—all state owned by components (GameStateComponent, BrickGridComponent).
+    /// Responsibility: instantiate entities and components, wire their signal events together.
+    /// 
+    /// Following Nystrom's Component pattern:
+    /// - Controller is dumb: only wires signals, doesn't execute logic
+    /// - All mutable state owned by components
+    /// - All decision logic owned by components
+    /// - Components emit events; controller connects them
     /// </summary>
-    public partial class Orchestrator : Node2D
+    public partial class Controller : Node2D
     {
         #region Components & Entities
 
