@@ -4,24 +4,32 @@ using System;
 namespace Breakout.Components
 {
     /// <summary>
-    /// GameStateComponent — owns all mutable game state and rule logic.
+    /// GameStateComponent — owns all mutable game state, rule logic, and state machine.
     /// 
     /// Following Nystrom's Component pattern:
-    /// - Component owns state (score, lives, hit count, speed milestones, paddle shrink flag)
+    /// - Component owns state (score, lives, hit count, speed milestones, paddle shrink flag, flow state)
     /// - Component is a plain C# class (NOT a Node), like PhysicsComponent
     /// - Component emits C# events for state changes
     /// - Orchestrator coordinates by listening to events and calling entity methods
     /// 
-    /// Encapsulates canonical Breakout rules:
-    /// - Score tracking
-    /// - Lives management
-    /// - Speed increase milestones (4 hits, 12 hits, orange row, red row)
-    /// - Paddle shrink rule (once per game after red row + ceiling hit)
+    /// Encapsulates:
+    /// - Canonical Breakout rules (scoring, lives, speed increases, paddle shrink)
+    /// - Game flow state machine (Playing, GameOver, LevelComplete)
+    /// - State transitions triggered by game events (lives=0, all bricks destroyed)
     /// 
     /// Events are emitted when state changes occur, allowing Orchestrator to react.
     /// </summary>
     public partial class GameStateComponent
     {
+        #region State Enum
+        public enum GameState
+        {
+            Playing,
+            GameOver,
+            LevelComplete,
+            Paused
+        }
+        #endregion
         #region State
         /// <summary>
         /// Player score.
@@ -73,6 +81,11 @@ namespace Breakout.Components
         /// Set when first red brick is destroyed, cleared when paddle shrinks.
         /// </summary>
         private bool redRowBroken = false;
+
+        /// <summary>
+        /// Current game flow state.
+        /// </summary>
+        private GameState currentState = GameState.Playing;
         #endregion
 
         #region Events
@@ -101,6 +114,21 @@ namespace Breakout.Components
         /// Includes brick color enum to look up point value.
         /// </summary>
         public event Action<Models.BrickColor> BrickDestroyed;
+
+        /// <summary>
+        /// Emitted when game state transitions.
+        /// </summary>
+        public event Action<GameState> StateChanged;
+
+        /// <summary>
+        /// Emitted specifically when entering GameOver state.
+        /// </summary>
+        public event Action GameOver;
+
+        /// <summary>
+        /// Emitted specifically when entering LevelComplete state.
+        /// </summary>
+        public event Action LevelComplete;
         #endregion
 
         #region Constructor
@@ -226,6 +254,43 @@ namespace Breakout.Components
         /// Query if paddle has been shrunk.
         /// </summary>
         public bool HasPaddleShrunk() => paddleHasShrunk;
+
+        /// <summary>
+        /// Transition to a new game state.
+        /// Validates transition rules before allowing state change.
+        /// </summary>
+        public void SetState(GameState newState)
+        {
+            if (newState == currentState)
+                return;  // No-op if state doesn't change
+
+            GD.Print($"GameState: {currentState} → {newState}");
+
+            currentState = newState;
+            StateChanged?.Invoke(currentState);
+
+            // Emit state-specific events for specialized handling
+            switch (currentState)
+            {
+                case GameState.GameOver:
+                    GameOver?.Invoke();
+                    break;
+
+                case GameState.LevelComplete:
+                    LevelComplete?.Invoke();
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// Query current state.
+        /// </summary>
+        public GameState GetState() => currentState;
+
+        /// <summary>
+        /// Check if game is actively playing (not paused or over).
+        /// </summary>
+        public bool IsPlaying() => currentState == GameState.Playing;
         #endregion
     }
 }
