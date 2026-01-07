@@ -26,7 +26,8 @@ Rather than providing complete code, this project **implements features iterativ
 - **Entities:** Paddle (player-controlled), Ball (physics-driven), Brick Grid (8×8, destructible), Walls (boundary)
 - **Gameplay:** Ball bounces off walls, paddle, and bricks; bricks destroyed on contact; speed increases (4, 12 hit milestones) working; paddle shrinking working
 - **Collision Detection:** Signal-based (`AreaEntered`/`AreaExited` events) instead of polling
-- **Components:** PhysicsComponent (ball physics, speed multipliers), GameStateComponent (rules & state), BrickGridComponent (grid management), EntityComponent (factory)
+- **Components:** PhysicsComponent (ball physics, speed multipliers), GameStateComponent (rules & state), BrickGrid (grid management in Infrastructure/), EntityFactoryUtility (factory in Utilities/)
+- **Brick Destruction:** Ball collision → PhysicsComponent.HandleBrickCollision() → brick.Destroy() → BrickDestroyed signal → BrickGrid listener
 - **Configuration:** Centralized in `Config.cs`; dynamic brick grid spacing
 - **Brick Colors:** Type-safe enum with scoring metadata (Red=7pts, Orange=5pts, Green=3pts, Yellow=1pt)
 - **Architecture:** Nystrom's Component Pattern — plain C# components own state & logic; thin entities forward events; pure signal wiring; direct component access
@@ -46,29 +47,39 @@ Rather than providing complete code, this project **implements features iterativ
 
 **Pattern:** Component (plain C# classes owning state + logic) + Observer (Godot Signals + C# Events)
 
-**Architecture Layers:**
+**Architecture Layers (Organized by Role):**
 
-1. **Components (Plain C# Classes)** — Own state and logic, emit C# events:
+1. **Components/** (Business Logic) — Own state and logic, emit C# events:
    - `PhysicsComponent` — Ball velocity, position, collision tracking, speed multipliers, bounce logic
    - `GameStateComponent` — Score, lives, hit count, speed/shrink decision logic
-   - `BrickGridComponent` — Brick grid management and destruction tracking
-   - `EntityComponent` — Factory for entity-component pair instantiation
 
-2. **Entities (Thin Node2D Containers)** — Forward component events to Godot signals:
+2. **Infrastructure/** (World Structure) — Entity collections forming environment:
+   - `BrickGrid` — Brick grid management and destruction tracking
+   - `Walls` — Stateless boundary nodes
+
+3. **Utilities/** (Helpers) — Factory and lookup functions:
+   - `EntityFactoryUtility` — Factory for entity-component pair instantiation
+   - `BrickColorUtility` — Color-to-config lookup
+
+4. **Entities/** (Node2D Containers) — Forward component events to Godot signals:
    - `Ball` — Delegates to PhysicsComponent; emits `BallHitPaddle`, `BallOutOfBounds`, `BallHitCeiling` signals
    - `Paddle` — Input handling, movement bounds, `Shrink()` action method
-   - `Brick` — Collision detector; emits `BrickDestroyed` signal
-   - `Walls` — Stateless; boundary nodes only
+   - `Brick` — Has `Destroy()` method that emits `BrickDestroyed` signal and removes entity
 
-3. **Controller (Pure Signal Wiring)** — Zero business logic:
-   - Instantiates components and entities via `EntityComponent`
-   - Wires C# events to Godot signals to other component methods
-   - No state; no decisions; mechanical coordination only
+5. **Game/** (Orchestration + Config):
+   - `Controller` — Pure signal wiring; zero business logic; instantiates via EntityFactoryUtility
+   - `Config` — Centralized constants
 
 **Signal Flow Example:**
 ```
-Brick destroyed → BrickGridComponent emits BrickDestroyedWithColor
-                  ↓
+Ball hits brick → PhysicsComponent.HandleBrickCollision()
+                  ├─ bounces ball (velocity.Y = -velocity.Y)
+                  └─ calls brick.Destroy() → emits BrickDestroyed signal
+                     ↓
+                  BrickGrid listens → OnBrickDestroyed()
+                  ├─ removes brick from dictionary
+                  └─ emits BrickDestroyedWithColor(color)
+                     ↓
                   GameStateComponent.OnBrickDestroyed() checks milestones
                   ├─ Emits SpeedIncreaseRequired → Controller wires DIRECTLY to PhysicsComponent.ApplySpeedMultiplier()
                   │  (no indirection through Ball!)
@@ -91,17 +102,28 @@ dotnet build
 # Scene: main.tscn (auto-loaded)
 ```
 
-### Key Files
-- **Game/Controller.cs** — Pure signal wiring and instantiation via EntityComponent; zero business logic
-- **Game/Config.cs** — All constants; dynamic layout logic
-- **Components/EntityComponent.cs** — Factory component; creates entity-component pairs and manages scene tree instantiation
-- **Components/PhysicsComponent.cs** — Ball physics, collision tracking, speed multipliers; direct target of Controller wiring
-- **Components/GameStateComponent.cs** — Game rules, score, lives, speed/shrink logic; emits events for Controller to wire
-- **Components/BrickGridComponent.cs** — Brick grid management and destruction tracking
-- **Entities/Ball.cs** — Thin entity; delegates physics to PhysicsComponent; exposes component via GetPhysicsComponent()
-- **Entities/Paddle.cs** — Input handling, movement, shrink action
-- **Entities/Brick.cs** — Collision detector, destruction signal
-- **Infrastructure/Walls.cs** — Boundary walls (positioned outside viewport)
+### Key Files (Organized by Folder)
+
+**Game/**
+- **Controller.cs** — Pure signal wiring and instantiation via EntityFactoryUtility; zero business logic
+- **Config.cs** — All constants; dynamic layout logic
+
+**Components/**
+- **PhysicsComponent.cs** — Ball physics, collision tracking, speed multipliers; calls brick.Destroy() on collision
+- **GameStateComponent.cs** — Game rules, score, lives, speed/shrink logic; emits events for Controller to wire
+
+**Infrastructure/**
+- **BrickGrid.cs** — Brick grid management and destruction tracking; listens to Brick.BrickDestroyed signals
+- **Walls.cs** — Boundary walls (positioned outside viewport)
+
+**Utilities/**
+- **EntityFactoryUtility.cs** — Factory for entity-component pair instantiation; creates all game entities
+- **BrickColorUtility.cs** — Color-to-config lookup (Red/Orange/Green/Yellow)
+
+**Entities/**
+- **Ball.cs** — Thin entity; delegates physics to PhysicsComponent; exposes component via GetPhysicsComponent()
+- **Paddle.cs** — Input handling, movement, shrink action
+- **Brick.cs** — Has Destroy() method that emits BrickDestroyed signal and removes entity from scene
 
 ### Git Workflow
 
@@ -170,8 +192,8 @@ docs: documentation
 | Update Method | https://gameprogrammingpatterns.com/update-method.html | Entity `_Process()` updates |
 | Game Loop | https://gameprogrammingpatterns.com/game-loop.html | Controller drives loop |
 | Observer | https://gameprogrammingpatterns.com/observer.html | C# events & Godot Signals |
-| Component | https://gameprogrammingpatterns.com/component.html | PhysicsComponent, GameStateComponent, BrickGridComponent (implemented) |
-| Factory | https://gameprogrammingpatterns.com/factory-method.html | EntityComponent creates entity-component pairs |
+| Component | https://gameprogrammingpatterns.com/component.html | PhysicsComponent, GameStateComponent (business logic components) |
+| Factory | https://gameprogrammingpatterns.com/factory-method.html | EntityFactoryUtility creates entity-component pairs |
 | Object Pool | https://gameprogrammingpatterns.com/object-pool.html | Brick grid Dictionary |
 
 ---
@@ -195,11 +217,30 @@ docs: documentation
 - Updated Controller to wire `SpeedIncreaseRequired` directly to `PhysicsComponent.ApplySpeedMultiplier()`
 - Removed `Ball.ApplySpeedMultiplier()` pass-through; added `Ball.GetPhysicsComponent()`
 
+**Phase 8:** Reorganized folder structure by architectural role (January 6):
+- Reclassified components by role instead of mixing all in one folder
+  - **Components/** = business logic (PhysicsComponent, GameStateComponent, future Sound/Rendering/AI)
+  - **Infrastructure/** = world structures (Walls, BrickGrid, future LevelLayout/Environment)
+  - **Utilities/** = helper functions (EntityFactoryUtility, BrickColorUtility)
+  - **Game/** = orchestration (Controller) + config (Config)
+- Renamed `EntityComponent` → `EntityFactoryUtility` (factory utility, not component)
+- Renamed `BrickGridComponent` → `BrickGrid` (infrastructure, not business logic component)
+- Updated all usages to reflect new locations
+
+**Phase 9:** Fixed brick destruction bug:
+- Discovered bricks weren't being destroyed on collision
+- Root cause: `PhysicsComponent.HandleBrickCollision()` only bounced ball, never destroyed brick
+- Added `Brick.Destroy()` method that emits `BrickDestroyed` signal and calls `QueueFree()`
+- Updated `HandleBrickCollision()` to call `brick.Destroy()` after bouncing
+- Signal flow now works: Brick.Destroy() → BrickGrid listener → emits BrickDestroyedWithColor → GameState rules applied
+
 **Result:**
 - ✅ Components own state AND logic (not just data containers)
 - ✅ Entities are thin; they forward events only
 - ✅ Controller is mechanical signal wiring only (zero state, zero decisions)
 - ✅ **No indirection**: all signals wired directly to behavior owners
+- ✅ Folder organization reflects architectural intent (Components = logic, Infrastructure = structures, Utilities = helpers)
+- ✅ Brick destruction works completely: hit → destroy → signal → rules applied
 - ✅ Speed multipliers persist across ball resets
 - ✅ Paddle shrinks exactly once (via flag guard)
 - ✅ No state polling; pure event-driven
