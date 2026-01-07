@@ -11,6 +11,8 @@ namespace Breakout.Entities
     public partial class Paddle : Area2D
     {
         private Vector2 size;
+        private bool inputEnabled = true;
+
 
         public Paddle(Vector2 position, Vector2 size, Color color)
         {
@@ -47,6 +49,8 @@ namespace Breakout.Entities
         /// <param name="delta"></param>
         public override void _Process(double delta)
         {
+            if (!inputEnabled) return;  // Skip input processing if disabled
+
             // Handle input
             var input = Input.GetAxis("ui_left", "ui_right");
             
@@ -89,6 +93,15 @@ namespace Breakout.Entities
             }
 
             GD.Print($"Paddle shrunk to {size.X}x{size.Y}");
+        }
+
+        /// <summary>
+        /// Enable or disable paddle input handling.
+        /// Called when game ends to prevent further paddle movement.
+        /// </summary>
+        public void SetInputEnabled(bool enabled)
+        {
+            inputEnabled = enabled;
         }
     }
 }

@@ -1,7 +1,6 @@
-using Godot;
 using Breakout.Components;
 using Breakout.Utilities;
-using Breakout.Infrastructure;
+using Godot;
 
 namespace Breakout.Game
 {
@@ -45,7 +44,10 @@ namespace Breakout.Game
             // Wire all signals directly to component behavior owners (zero indirection)
             gameState.SpeedIncreaseRequired += ballPhysics.ApplySpeedMultiplier;  // Wire to physics, not ball
             gameState.PaddleShrinkRequired += paddle.Shrink;
-            brickGrid.BrickDestroyedWithColor += gameState.OnBrickDestroyed;
+            
+            // Wire brick destruction to BOTH game rules (speed/shrink) AND scoring
+            brickGrid.BrickDestroyedWithColor += gameState.OnBrickDestroyed;    // Game rules (speed increases, paddle shrink)
+            brickGrid.BrickDestroyedWithColor += gameState.AddScore;             // Scoring
 
             // Wire UI events
             gameState.ScoreChanged += uiComponent.OnScoreChanged;
@@ -59,6 +61,11 @@ namespace Breakout.Game
                 }
             };
 
+            // Wire GameOver event to halt gameplay and display message
+            gameState.GameOver += () => {
+                OnGameOver(ball, ballPhysics, paddle, uiComponent, gameState);
+            };
+
             // Connect ball signals to game state
             ball.BallHitPaddle += () => OnBallHitPaddle();
             ball.BallOutOfBounds += () => {
@@ -67,9 +74,9 @@ namespace Breakout.Game
             };
             ball.BallHitCeiling += () => gameState.OnBallHitCeiling();
 
-            // All-bricks-destroyed detection
-            brickGrid.GridInstantiated += (brickCount) => {
-                OnGridInstantiated(brickCount, brickGrid, gameState);
+            // Wire all-bricks-destroyed to level complete
+            brickGrid.AllBricksDestroyed += () => {
+                gameState.SetState(GameStateComponent.GameState.LevelComplete);
             };
 
             GD.Print("Controller initialized with Objective 2.1: Scoring & UI");
@@ -82,39 +89,39 @@ namespace Breakout.Game
         }
         #endregion
 
-#region Signal Handlers
+        #region Signal Handlers
+        /// <summary>
+        /// Called when ball hits the paddle.
+        /// </summary>
         private void OnBallHitPaddle()
         {
             GD.Print("Ball hit paddle!");
         }
 
+        /// <summary>
+        ///  Called when ball goes out of bounds (missed by paddle).
+        /// </summary>
         private void OnBallOutOfBounds()
         {
             GD.Print("Ball out of bounds!");
         }
 
         /// <summary>
-        /// Called when brick grid is instantiated.
-        /// Stores brick count for level-complete detection.
+        /// Called when game transitions to GameOver state.
+        /// Stops gameplay and displays game-over message.
         /// </summary>
-        private int totalBricksInLevel = 0;
-        private int bricksDestroyedInLevel = 0;
-
-        private void OnGridInstantiated(int brickCount, Infrastructure.BrickGrid brickGrid, GameStateComponent gameState)
+        private void OnGameOver(Entities.Ball ball, PhysicsComponent ballPhysics, Entities.Paddle paddle, UIComponent uiComponent, GameStateComponent gameState)
         {
-            totalBricksInLevel = brickCount;
-            bricksDestroyedInLevel = 0;
-            GD.Print($"Level instantiated: {totalBricksInLevel} bricks");
+            GD.Print("GAME OVER!");
 
-            // Wire brick destruction tracking for level-complete detection
-            brickGrid.BrickDestroyedWithColor += (color) => {
-                bricksDestroyedInLevel++;
-                if (bricksDestroyedInLevel >= totalBricksInLevel)
-                {
-                    gameState.SetState(GameStateComponent.GameState.LevelComplete);
-                    GD.Print("Level complete! All bricks destroyed.");
-                }
-            };
+            // Stop ball movement
+            ballPhysics.SetVelocity(Vector2.Zero);
+
+            // Disable paddle input
+            paddle.SetInputEnabled(false);
+
+            // Display game over message in UI
+            uiComponent.ShowGameOverMessage();
         }
         #endregion
     }

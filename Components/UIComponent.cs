@@ -18,6 +18,7 @@ namespace Breakout.Components
         #region UI Elements
         private Label scoreLabel;
         private Label livesLabel;
+        private Label gameOverLabel;
         #endregion
 
         #region Lifecycle
@@ -58,6 +59,23 @@ namespace Breakout.Components
         public void OnLivesChanged(int newLives)
         {
             livesLabel.Text = $"Lives: {newLives}";
+        }
+
+        /// <summary>
+        /// Called when game transitions to GameOver state.
+        /// Displays game-over message in center of screen.
+        /// </summary>
+        public void ShowGameOverMessage()
+        {
+            gameOverLabel = new Label();
+            gameOverLabel.Text = "GAME OVER\nPress ESC to exit";
+            gameOverLabel.AddThemeFontSizeOverride("font_size", 64);
+            gameOverLabel.HorizontalAlignment = HorizontalAlignment.Center;
+            gameOverLabel.VerticalAlignment = VerticalAlignment.Center;
+            gameOverLabel.Position = new Vector2(Config.ViewportWidth / 2 - 200, Config.ViewportHeight / 2 - 100);
+            AddChild(gameOverLabel);
+
+            GD.Print("Game Over message displayed");
         }
         #endregion
     }

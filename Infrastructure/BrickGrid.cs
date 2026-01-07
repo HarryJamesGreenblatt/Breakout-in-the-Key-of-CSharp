@@ -38,6 +38,11 @@ namespace Breakout.Infrastructure
         public event Action<Models.BrickColor> BrickDestroyedWithColor;
 
         /// <summary>
+        /// Emitted when all bricks are destroyed (grid becomes empty).
+        /// </summary>
+        public event Action AllBricksDestroyed;
+
+        /// <summary>
         /// Emitted when grid is instantiated (for UI/debug).
         /// </summary>
         public event Action<int> GridInstantiated;
@@ -112,6 +117,13 @@ namespace Breakout.Infrastructure
 
                 // Emit event with color (for game rules)
                 BrickDestroyedWithColor?.Invoke(color);
+
+                // Check if all bricks destroyed (level complete)
+                if (brickGrid.Count == 0)
+                {
+                    AllBricksDestroyed?.Invoke();
+                    GD.Print("All bricks destroyed!");
+                }
             }
         }
         #endregion
