@@ -5,16 +5,15 @@ using Breakout.Utilities;
 using System;
 using System.Collections.Generic;
 
-namespace Breakout.Components
+namespace Breakout.Infrastructure
 {
     /// <summary>
-    /// BrickGridComponent — owns the brick grid and manages brick lifecycle.
+    /// BrickGrid — infrastructure component managing the brick grid.
     /// 
-    /// Following Nystrom's Component pattern:
-    /// - Component owns state (brick grid dictionary)
-    /// - Component is a plain C# class (NOT a Node)
-    /// - Component emits C# events for state changes
-    /// - Orchestrator coordinates by listening to events
+    /// Classified as Infrastructure because:
+    /// - Manages a concrete construct of entities (brick grid)
+    /// - Similar to Walls (both are entity collections forming world structure)
+    /// - Distinct from arbitrary business logic components (Physics, GameState, Sound, Rendering)
     /// 
     /// Responsibilities:
     /// - Create and manage brick grid
@@ -22,7 +21,7 @@ namespace Breakout.Components
     /// - Handle brick destruction (remove from grid, compute brick color)
     /// - Emit BrickDestroyed event with color for scoring/rules
     /// </summary>
-    public partial class BrickGridComponent
+    public partial class BrickGrid
     {
         #region State
         /// <summary>
@@ -47,7 +46,7 @@ namespace Breakout.Components
         #region Public API
         /// <summary>
         /// Instantiates the brick grid.
-        /// Called by Orchestrator during setup.
+        /// Called by factory during setup.
         /// </summary>
         public void InstantiateGrid(Godot.Node parentNode)
         {

@@ -276,6 +276,9 @@ namespace Breakout.Components
                 velocity.X = -velocity.X;
                 GD.Print("Bounce off brick (horizontal)");
             }
+
+            // Destroy the brick (emits signal for game rules)
+            brick.Destroy();
         }
         #endregion
 

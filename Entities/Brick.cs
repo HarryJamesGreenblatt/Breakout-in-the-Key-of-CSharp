@@ -71,6 +71,15 @@ namespace Breakout.Entities
         /// Get the brick's size (width and height).
         /// </summary>
         public Vector2 GetBrickSize() => size;
+
+        /// <summary>
+        /// Destroy this brick and emit the BrickDestroyed signal.
+        /// </summary>
+        public void Destroy()
+        {
+            EmitSignal(SignalName.BrickDestroyed, brickId);
+            QueueFree();
+        }
         #endregion
 
     }

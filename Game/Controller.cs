@@ -1,18 +1,20 @@
 using Godot;
 using Breakout.Components;
+using Breakout.Utilities;
+using Breakout.Infrastructure;
 
 namespace Breakout.Game
 {
     /// <summary>
     /// Game controller: pure signal wiring and coordination.
-    /// Instantiation delegated to EntityComponent (separation of concerns).
+    /// Instantiation delegated to EntityFactory (separation of concerns).
     /// All business logic delegated to components (GameStateComponent, etc.).
     /// 
     /// Responsibility: ONLY wire signals between components and entities.
     /// Nothing else. Zero persistent state.
     /// 
     /// Following Nystrom's Component pattern:
-    /// - EntityComponent creates and manages entities
+    /// - EntityFactory creates and manages entities
     /// - Controller only wires signals
     /// - Components own all state and logic
     /// </summary>
@@ -21,15 +23,15 @@ namespace Breakout.Game
         #region Game Loop
         public override void _Ready()
         {
-            // Instantiate EntityComponent (responsible for creating entity-component pairs)
-            var entityComponent = new EntityComponent();
+            // Instantiate EntityFactoryUtility (responsible for creating entity-component pairs)
+            var entityFactory = new EntityFactoryUtility();
 
             // Instantiate components and entities
-            var gameState = entityComponent.CreateGameState();
-            var brickGrid = entityComponent.CreateBrickGrid(this);
-            var paddle = entityComponent.CreatePaddle(this);
-            var (ball, ballPhysics) = entityComponent.CreateBallWithPhysics(this);
-            var walls = entityComponent.CreateWalls(this);  // For completeness; walls are stateless
+            var gameState = entityFactory.CreateGameState();
+            var brickGrid = entityFactory.CreateBrickGrid(this);
+            var paddle = entityFactory.CreatePaddle(this);
+            var (ball, ballPhysics) = entityFactory.CreateBallWithPhysics(this);
+            var walls = entityFactory.CreateWalls(this);  // For completeness; walls are stateless
 
             // Wire all signals directly to component behavior owners (zero indirection)
             gameState.SpeedIncreaseRequired += ballPhysics.ApplySpeedMultiplier;  // Wire to physics, not ball

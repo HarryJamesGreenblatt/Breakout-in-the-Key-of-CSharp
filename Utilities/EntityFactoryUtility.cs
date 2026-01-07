@@ -1,30 +1,31 @@
 using Godot;
 using Breakout.Entities;
 using Breakout.Infrastructure;
+using Breakout.Components;
 using Breakout.Game;
 
-namespace Breakout.Components
+namespace Breakout.Utilities
 {
     /// <summary>
-    /// EntityComponent — responsible for instantiating and composing entity-component pairs.
+    /// EntityFactoryUtility — factory utility for instantiating and composing entity-component pairs.
     /// 
-    /// Following Nystrom's Component pattern:
-    /// - Component owns the responsibility of entity creation and scene tree management
-    /// - Component is a plain C# class (NOT a Node)
-    /// - Provides factory methods for each game entity type
-    /// - Separation of concerns: EntityComponent creates, Controller wires signals
+    /// Factory utility responsible for:
+    /// - Creating entity instances with consistent configuration
+    /// - Attaching infrastructure components (BrickGrid)
+    /// - Composing entities with their corresponding behavior components
+    /// - Managing scene tree instantiation
     /// 
     /// Encapsulates creation logic for:
     /// - Ball entity with PhysicsComponent
     /// - Paddle entity
-    /// - Brick grid with BrickGridComponent
+    /// - Brick grid infrastructure with BrickGrid
     /// - Walls infrastructure
     /// - Game state component
     /// 
     /// This ensures all entity-component pairs are created consistently and the Controller
     /// remains pure signal wiring.
     /// </summary>
-    public class EntityComponent
+    public class EntityFactoryUtility
     {
         #region Factory Methods
 
@@ -57,13 +58,13 @@ namespace Breakout.Components
         }
 
         /// <summary>
-        /// Create the brick grid component and instantiate all bricks in the scene.
+        /// Create the brick grid infrastructure component and instantiate all bricks in the scene.
         /// </summary>
         /// <param name="parent">Parent node to attach bricks to.</param>
-        /// <returns>Instantiated BrickGridComponent.</returns>
-        public BrickGridComponent CreateBrickGrid(Node parent)
+        /// <returns>Instantiated BrickGrid.</returns>
+        public BrickGrid CreateBrickGrid(Node parent)
         {
-            var brickGrid = new BrickGridComponent();
+            var brickGrid = new BrickGrid();
             brickGrid.InstantiateGrid(parent);
             return brickGrid;
         }
