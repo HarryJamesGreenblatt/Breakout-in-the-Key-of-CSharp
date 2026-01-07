@@ -6,7 +6,6 @@ namespace Breakout.Entities
     /// <summary>
     /// Brick entity — destructible on ball collision.
     /// Canonical Breakout: all bricks destroyed in one hit.
-    /// No health component needed (follows original ruleset exactly).
     /// </summary>
     public partial class Brick : Area2D
     {
