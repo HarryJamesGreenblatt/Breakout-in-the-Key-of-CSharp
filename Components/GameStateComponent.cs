@@ -221,9 +221,9 @@ namespace Breakout.Components
 
         /// <summary>
         /// Called when ball goes out of bounds.
-        /// Decrements lives.
+        /// Decrements lives by one.
         /// </summary>
-        public void LoseLive()
+        public void DecrementLives()
         {
             lives--;
             LivesChanged?.Invoke(lives);

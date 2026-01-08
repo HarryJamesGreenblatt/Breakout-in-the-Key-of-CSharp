@@ -128,7 +128,8 @@ namespace Breakout.Components
             if (position.Y > Config.Ball.OutOfBoundsY)
             {
                 OutOfBounds?.Invoke();
-                ResetPhysics();
+                // NOTE: ResetPhysics() is now called by Ball after OutOfBounds event
+                // This allows Controller to check game state before resetting
             }
 
             return position;

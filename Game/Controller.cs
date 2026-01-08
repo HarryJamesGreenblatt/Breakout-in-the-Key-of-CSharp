@@ -24,6 +24,10 @@ namespace Breakout.Game
     /// </summary>
     public partial class Controller : Node2D
     {
+        #region State
+        private GameStateComponent gameState;
+        #endregion
+
         #region Game Loop
         public override void _Ready()
         {
@@ -31,7 +35,7 @@ namespace Breakout.Game
             var entityFactory = new EntityFactoryUtility();
 
             // Instantiate components and entities
-            var gameState = entityFactory.CreateGameState();
+            gameState = entityFactory.CreateGameState();
             var brickGrid = entityFactory.CreateBrickGrid(this);
             var paddle = entityFactory.CreatePaddle(this);
             var (ball, ballPhysics) = entityFactory.CreateBallWithPhysics(this);
@@ -61,16 +65,18 @@ namespace Breakout.Game
                 }
             };
 
-            // Wire GameOver event to halt gameplay and display message
+            // Wire GameOver event to disable ball, paddle, and show message
             gameState.GameOver += () => {
-                OnGameOver(ball, ballPhysics, paddle, uiComponent, gameState);
+                ball.ProcessMode = ProcessModeEnum.Disabled;
+                paddle.SetInputEnabled(false);
+                uiComponent.ShowGameOverMessage();
             };
 
             // Connect ball signals to game state
             ball.BallHitPaddle += () => OnBallHitPaddle();
             ball.BallOutOfBounds += () => {
                 OnBallOutOfBounds();
-                gameState.LoseLive();
+                gameState.DecrementLives();
             };
             ball.BallHitCeiling += () => gameState.OnBallHitCeiling();
 
@@ -84,8 +90,11 @@ namespace Breakout.Game
 
         public override void _Process(double delta)
         {
-            // Game loop (state transitions, rule checks, etc.)
-            // All event-driven now; no polling
+            // Handle ESC key to exit on game over (check state, don't manage it)
+            if (Input.IsActionJustPressed("ui_cancel") && gameState.GetState() == GameStateComponent.GameState.GameOver)
+            {
+                GetTree().Quit();
+            }
         }
         #endregion
 
@@ -104,24 +113,6 @@ namespace Breakout.Game
         private void OnBallOutOfBounds()
         {
             GD.Print("Ball out of bounds!");
-        }
-
-        /// <summary>
-        /// Called when game transitions to GameOver state.
-        /// Stops gameplay and displays game-over message.
-        /// </summary>
-        private void OnGameOver(Entities.Ball ball, PhysicsComponent ballPhysics, Entities.Paddle paddle, UIComponent uiComponent, GameStateComponent gameState)
-        {
-            GD.Print("GAME OVER!");
-
-            // Stop ball movement
-            ballPhysics.SetVelocity(Vector2.Zero);
-
-            // Disable paddle input
-            paddle.SetInputEnabled(false);
-
-            // Display game over message in UI
-            uiComponent.ShowGameOverMessage();
         }
         #endregion
     }

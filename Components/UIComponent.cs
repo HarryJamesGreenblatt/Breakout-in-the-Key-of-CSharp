@@ -72,7 +72,16 @@ namespace Breakout.Components
             gameOverLabel.AddThemeFontSizeOverride("font_size", 64);
             gameOverLabel.HorizontalAlignment = HorizontalAlignment.Center;
             gameOverLabel.VerticalAlignment = VerticalAlignment.Center;
-            gameOverLabel.Position = new Vector2(Config.ViewportWidth / 2 - 200, Config.ViewportHeight / 2 - 100);
+            
+            // Set size before positioning so we can calculate center correctly
+            gameOverLabel.CustomMinimumSize = new Vector2(600, 300);
+            
+            // Center the label by positioning it so its center is at viewport center
+            // Position is top-left corner, so we subtract half the size to center it
+            float centerX = Config.ViewportWidth / 2 - gameOverLabel.CustomMinimumSize.X / 2;
+            float centerY = Config.ViewportHeight / 2 - gameOverLabel.CustomMinimumSize.Y / 2;
+            gameOverLabel.Position = new Vector2(centerX, centerY);
+            
             AddChild(gameOverLabel);
 
             GD.Print("Game Over message displayed");

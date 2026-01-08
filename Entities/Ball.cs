@@ -105,6 +105,8 @@ namespace Breakout.Entities
             physics.OutOfBounds += () =>
             {
                 EmitSignal(SignalName.BallOutOfBounds);
+                // Reset physics after emitting the signal so listeners can react first
+                physics.ResetPhysics();
             };
             physics.CeilingHit += () =>
             {
