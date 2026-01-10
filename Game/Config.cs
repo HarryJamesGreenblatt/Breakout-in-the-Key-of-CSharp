@@ -53,7 +53,7 @@ namespace Breakout.Game
 
         public static class Walls
         {
-            public static readonly Color Color = new Color(0.5f, 0.5f, 0.5f, 1);
+            public static readonly Color Color = new Color(1, 0, 0, 1);  // Red (matches top brick row)
             public const int CollisionLayer = 1;
             public const int CollisionMask = 1;
         }
@@ -80,7 +80,7 @@ namespace Breakout.Game
 
             public static Vector2 Position { get { EnsureInitialized(); return cachedPosition; } }
             public static Vector2 Size { get { EnsureInitialized(); return cachedSize; } }
-            public static readonly Color Color = new Color(0, 1, 0, 1);
+            public static readonly Color Color = new Color(0, 0, 1, 1);  // Blue
             public static float Speed { get { EnsureInitialized(); return cachedSpeed; } }
 
             public static float MinX => 0;
@@ -115,7 +115,7 @@ namespace Breakout.Game
             public static Vector2 Position { get { EnsureInitialized(); return cachedPosition; } }
             public static Vector2 Size { get { EnsureInitialized(); return cachedSize; } }
             public static Vector2 Velocity { get { EnsureInitialized(); return cachedVelocity; } }
-            public static readonly Color Color = new Color(1, 1, 0, 1);
+            public static readonly Color Color = new Color(1, 1, 1, 1);  // White
 
             public static float BounceMarginX { get { EnsureInitialized(); return cachedBounceMarginX; } }
             public static float BounceMarginTop { get { EnsureInitialized(); return cachedBounceMarginTop; } }
@@ -151,9 +151,8 @@ namespace Breakout.Game
             /// </summary>
             private static Vector2 ComputeBrickSize()
             {
-                float margin = ViewportWidth * 0.020f;  // 2% of width
                 float totalHorizontalGaps = (BrickGrid.GridColumns - 1) * BrickGrid.HorizontalGap;
-                float availableWidth = ViewportWidth - 2 * margin - totalHorizontalGaps;
+                float availableWidth = ViewportWidth - totalHorizontalGaps;  // No margins, use full width
                 float brickWidth = availableWidth / BrickGrid.GridColumns;
                 float brickHeight = ViewportHeight * 0.018f;  // 1.8% of height
                 return new Vector2(brickWidth, brickHeight);
@@ -171,7 +170,7 @@ namespace Breakout.Game
             private static void EnsureInitialized()
             {
                 if (initialized) return;
-                cachedGridStartPosition = new Vector2(ViewportWidth * 0.020f, ViewportHeight * 0.089f);
+                cachedGridStartPosition = new Vector2(0, ViewportHeight * 0.089f);  // Flush to left edge (no margin)
                 cachedGridSpacingX = Brick.Size.X + HorizontalGap;
                 cachedGridSpacingY = Brick.Size.Y + VerticalGap;  // Small vertical gap between rows
                 initialized = true;

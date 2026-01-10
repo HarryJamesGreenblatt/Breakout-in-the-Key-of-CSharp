@@ -24,19 +24,19 @@ namespace Breakout.Components
         #region Lifecycle
         public override void _Ready()
         {
-            // Create score label (top-left, arcade-style: small, minimal)
+            // Create score label (top-left, arcade-style: larger, visible)
             scoreLabel = new Label();
-            scoreLabel.Position = new Vector2(5, 5);
+            scoreLabel.Position = new Vector2(10, 5);
             scoreLabel.Text = "SCORE: 0";
-            scoreLabel.AddThemeFontSizeOverride("font_size", 14);
+            scoreLabel.AddThemeFontSizeOverride("font_size", 24);
             scoreLabel.AddThemeColorOverride("font_color", new Color(1, 1, 1, 1));  // White text
             AddChild(scoreLabel);
 
-            // Create lives label (top-right, arcade-style: small, minimal)
+            // Create lives label (top-right, arcade-style: larger, visible)
             livesLabel = new Label();
-            livesLabel.Position = new Vector2(Config.ViewportWidth - 80, 5);
+            livesLabel.Position = new Vector2(Config.ViewportWidth - 150, 5);
             livesLabel.Text = "LIVES: 3";
-            livesLabel.AddThemeFontSizeOverride("font_size", 14);
+            livesLabel.AddThemeFontSizeOverride("font_size", 24);
             livesLabel.AddThemeColorOverride("font_color", new Color(1, 1, 1, 1));  // White text
             AddChild(livesLabel);
 
@@ -71,7 +71,7 @@ namespace Breakout.Components
         {
             gameOverLabel = new Label();
             gameOverLabel.Text = "GAME OVER";
-            gameOverLabel.AddThemeFontSizeOverride("font_size", 32);
+            gameOverLabel.AddThemeFontSizeOverride("font_size", 64);
             gameOverLabel.AddThemeColorOverride("font_color", new Color(1, 1, 1, 1));  // White
             gameOverLabel.HorizontalAlignment = HorizontalAlignment.Center;
             gameOverLabel.VerticalAlignment = VerticalAlignment.Center;
