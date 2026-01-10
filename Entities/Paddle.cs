@@ -12,6 +12,7 @@ namespace Breakout.Entities
     {
         private Vector2 size;
         private bool inputEnabled = true;
+        private float velocityX = 0f;  // Track horizontal velocity for paddle momentum transfer
 
 
         public Paddle(Vector2 position, Vector2 size, Color color)
@@ -54,8 +55,11 @@ namespace Breakout.Entities
             // Handle input
             var input = Input.GetAxis("ui_left", "ui_right");
             
+            // Calculate and store velocity for physics momentum transfer
+            velocityX = (float)(Config.Paddle.Speed * input);
+            
             // Update position
-            Position += new Vector2((float)(Config.Paddle.Speed * input * delta), 0);
+            Position += new Vector2(velocityX * (float)delta, 0);
             
             // Constrain to bounds
             Position = new Vector2(
@@ -65,6 +69,12 @@ namespace Breakout.Entities
         }
 
         /// <summary>
+
+        /// <summary>
+        /// Returns the horizontal velocity of the paddle.
+        /// Used by PhysicsComponent to impart paddle momentum to the ball.
+        /// </summary>
+        public float GetVelocityX() => velocityX;
         /// Returns the size of the paddle.
         /// </summary>
         public Vector2 GetSize() => size;

@@ -213,33 +213,42 @@ namespace Breakout.Components
         #region Private - Paddle Collision
         private void HandlePaddleCollision(Entities.Paddle paddle)
         {
-            // Calculate contact point on paddle
+            // Calculate contact point on paddle surface
             Vector2 ballCenter = position + ballSize / 2;
             Vector2 paddleCenter = paddle.Position + paddle.GetSize() / 2;
             Vector2 paddleSize = paddle.GetSize();
 
-            // Delta between ball and paddle centers (normalized to -1...+1)
+            // Normalized contact position on paddle: -1 (left edge) to +1 (right edge)
             Vector2 delta = ballCenter - paddleCenter;
             float normalizedX = delta.X / (paddleSize.X / 2);
             normalizedX = Mathf.Clamp(normalizedX, -1f, 1f);
 
-            // Direct velocity manipulation for stronger steering effect
+            // Arcade Breakout physics:
+            // - Always bounce upward (Y velocity becomes negative/upward)
+            // - Contact point determines horizontal angle (edges vs center)
+            // - Maintain or slightly increase speed to feel responsive
+
             float speedMagnitude = velocity.Length();
 
-            // Ensure upward bounce: always make Y negative (upward in Godot)
+            // Ensure strong upward velocity for authentic feel
+            // Arcade Breakout: ball leaves paddle at steep angle (~45 degrees is common)
             velocity.Y = -Mathf.Abs(velocity.Y);
 
-            // Impart horizontal steering based on paddle contact point
-            const float maxSteerFactor = 0.6f;
-            velocity.X = speedMagnitude * maxSteerFactor * normalizedX;
+            // Angle control: contact point determines X velocity component
+            // Edge hits (normalizedX near ±1) give steeper angles
+            // Center hits (normalizedX near 0) go mostly straight up
+            const float maxAngleFactor = 0.7f;  // Max horizontal velocity relative to speed magnitude
+            velocity.X = speedMagnitude * maxAngleFactor * normalizedX;
 
-            // NOTE: Do NOT apply speed boost here. Speed increases follow canonical ruleset:
-            // - After 4 brick hits (4 hit milestone)
-            // - After 12 brick hits (12 hit milestone)
-            // - After ball contacts orange or red rows
-            // These are managed by Orchestrator, not by physics engine.
+            // Paddle velocity influence: if paddle is moving, impart some of that momentum
+            // This makes catching with moving paddle feel more dynamic
+            float paddleVelocityX = paddle.GetVelocityX();
+            if (Mathf.Abs(paddleVelocityX) > 0.1f)
+            {
+                velocity.X += paddleVelocityX * 0.3f;  // 30% of paddle's horizontal momentum
+            }
 
-            GD.Print($"Paddle bounce: contact={normalizedX:F2}, vel={velocity}");
+            GD.Print($"Paddle bounce: contact={normalizedX:F2}, paddleVel={paddleVelocityX:F2}, ballVel={velocity}");
         }
         #endregion
 

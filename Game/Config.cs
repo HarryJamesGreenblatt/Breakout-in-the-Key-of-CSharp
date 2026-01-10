@@ -4,16 +4,52 @@ namespace Breakout.Game
 {
     /// <summary>
     /// Centralized game configuration. All magic numbers, constants, and tunable values here.
+    /// 
+    /// IMPORTANT: ViewportWidth and ViewportHeight are read dynamically from project.godot
+    /// at initialization time. All other values (Paddle, Ball, Brick, BrickGrid) are computed
+    /// based on these dimensions. This ensures that changing window/size settings in project.godot
+    /// automatically cascades through the entire game configuration—no manual sync needed.
+    /// 
+    /// Initialization flow:
+    /// 1. Static constructor reads actual window dimensions from ProjectSettings
+    /// 2. Computes all derived values (positions, sizes, grid layout)
+    /// 3. Game starts with correct proportions for the window size
     /// </summary>
     public static class Config
     {
-        #region Viewport Dimensions
-        public const float ViewportWidth = 800f;
-        public const float ViewportHeight = 600f;
+        #region Viewport Dimensions (Synced from project.godot)
+        /// <summary>
+        /// Viewport width read from project.godot [display]/window/size/viewport_width.
+        /// Dynamic: changes in project.godot are automatically reflected.
+        /// </summary>
+        public static float ViewportWidth { get; private set; }
+
+        /// <summary>
+        /// Viewport height read from project.godot [display]/window/size/viewport_height.
+        /// Dynamic: changes in project.godot are automatically reflected.
+        /// </summary>
+        public static float ViewportHeight { get; private set; }
+
+        /// <summary>
+        /// Static constructor: reads actual window dimensions from ProjectSettings.
+        /// Called once at app startup; all other Config values computed from these.
+        /// </summary>
+        static Config()
+        {
+            // Read from project.godot [display] section
+            // ProjectSettings returns Variant; convert to float
+            var widthSetting = ProjectSettings.GetSetting("display/window/size/viewport_width");
+            var heightSetting = ProjectSettings.GetSetting("display/window/size/viewport_height");
+            
+            ViewportWidth = widthSetting.AsInt32();
+            ViewportHeight = heightSetting.AsInt32();
+
+            GD.Print($"Config initialized: Viewport {ViewportWidth}x{ViewportHeight}");
+        }
         #endregion
 
         #region Infrastructure
-        public const float WallThickness = 20f;
+        public const float WallThickness = 10f;
 
         public static class Walls
         {
@@ -26,14 +62,29 @@ namespace Breakout.Game
         #region Game Entities
         public static class Paddle
         {
-            public static readonly Vector2 Position = new Vector2(400, 550);
-            public static readonly Vector2 Size = new Vector2(100, 20);
-            public static readonly Color Color = new Color(0, 1, 0, 1);
-            public const float Speed = 600f;
+            // Cache computed values to avoid re-computing on every access
+            private static Vector2 cachedPosition;
+            private static Vector2 cachedSize;
+            private static float cachedSpeed;
+            private static bool initialized = false;
 
-            // Bounds calculated with walls positioned outside viewport: MinX at viewport left (0), MaxX keeps paddle right edge at viewport right
-            public static readonly float MinX = 0;
-            public static readonly float MaxX = ViewportWidth - Size.X;
+            private static void EnsureInitialized()
+            {
+                if (initialized) return;
+                cachedPosition = new Vector2(ViewportWidth / 2, ViewportHeight - 28);
+                cachedSize = new Vector2(ViewportWidth * 0.117f, ViewportHeight * 0.027f);
+                cachedSpeed = ViewportWidth * 0.586f;
+                initialized = true;
+                GD.Print($"Paddle config: pos={cachedPosition}, size={cachedSize}, speed={cachedSpeed}");
+            }
+
+            public static Vector2 Position { get { EnsureInitialized(); return cachedPosition; } }
+            public static Vector2 Size { get { EnsureInitialized(); return cachedSize; } }
+            public static readonly Color Color = new Color(0, 1, 0, 1);
+            public static float Speed { get { EnsureInitialized(); return cachedSpeed; } }
+
+            public static float MinX => 0;
+            public static float MaxX { get { EnsureInitialized(); return ViewportWidth - cachedSize.X; } }
 
             public const int CollisionLayer = 1;
             public const int CollisionMask = 1;
@@ -41,16 +92,34 @@ namespace Breakout.Game
 
         public static class Ball
         {
-            public static readonly Vector2 Position = new Vector2(400, 300);
-            public static readonly Vector2 Size = new Vector2(20, 20);
-            public static readonly Vector2 Velocity = new Vector2(210, 200);
+            // Cache computed values
+            private static Vector2 cachedPosition;
+            private static Vector2 cachedSize;
+            private static Vector2 cachedVelocity;
+            private static float cachedBounceMarginX;
+            private static float cachedBounceMarginTop;
+            private static bool initialized = false;
+
+            private static void EnsureInitialized()
+            {
+                if (initialized) return;
+                cachedPosition = new Vector2(ViewportWidth / 2, ViewportHeight / 2);
+                cachedSize = new Vector2(ViewportWidth * 0.0078f, ViewportWidth * 0.0078f);
+                cachedVelocity = new Vector2(ViewportWidth * 0.234f, ViewportHeight * 0.268f);
+                cachedBounceMarginX = cachedSize.X / 2;
+                cachedBounceMarginTop = cachedSize.Y / 2;
+                initialized = true;
+                GD.Print($"Ball config: size={cachedSize}, velocity={cachedVelocity}");
+            }
+
+            public static Vector2 Position { get { EnsureInitialized(); return cachedPosition; } }
+            public static Vector2 Size { get { EnsureInitialized(); return cachedSize; } }
+            public static Vector2 Velocity { get { EnsureInitialized(); return cachedVelocity; } }
             public static readonly Color Color = new Color(1, 1, 0, 1);
 
-            // Bounce margins: ball center (radius) relative to wall positions
-            public static readonly float BounceMarginX = Size.X / 2; // Ball radius (10)
-            public static readonly float BounceMarginTop = Size.Y / 2; // Ball radius (10)
-
-            public const float OutOfBoundsY = 600f;
+            public static float BounceMarginX { get { EnsureInitialized(); return cachedBounceMarginX; } }
+            public static float BounceMarginTop { get { EnsureInitialized(); return cachedBounceMarginTop; } }
+            public static float OutOfBoundsY => ViewportHeight;
 
             public const int CollisionLayer = 1;
             public const int CollisionMask = 1;
@@ -58,34 +127,69 @@ namespace Breakout.Game
 
         public static class Brick
         {
-            // Brick entity configuration
-            public static readonly Vector2 Size = ComputeBrickSize();
+            // Cache computed size
+            private static Vector2 cachedSize;
+            private static bool initialized = false;
+
+            private static void EnsureInitialized()
+            {
+                if (initialized) return;
+                cachedSize = ComputeBrickSize();
+                initialized = true;
+                GD.Print($"Brick config: size={cachedSize}");
+            }
+
+            // Brick entity configuration: computed to fill viewport width
+            public static Vector2 Size { get { EnsureInitialized(); return cachedSize; } }
             public const int CollisionLayer = 1;
             public const int CollisionMask = 1;
 
             /// <summary>
             /// Computes brick size to fill viewport width with small gaps between bricks.
             /// Formula: BrickWidth = (ViewportWidth - 2*margin - (GridColumns-1)*gap) / GridColumns
+            /// Auto-scales with viewport width.
             /// </summary>
             private static Vector2 ComputeBrickSize()
             {
-                float margin = 20f;
+                float margin = ViewportWidth * 0.020f;  // 2% of width
                 float totalHorizontalGaps = (BrickGrid.GridColumns - 1) * BrickGrid.HorizontalGap;
                 float availableWidth = ViewportWidth - 2 * margin - totalHorizontalGaps;
                 float brickWidth = availableWidth / BrickGrid.GridColumns;
-                return new Vector2(brickWidth, 15f);
+                float brickHeight = ViewportHeight * 0.018f;  // 1.8% of height
+                return new Vector2(brickWidth, brickHeight);
             }
         }
 
         public static class BrickGrid
         {
+            // Cache computed values
+            private static Vector2 cachedGridStartPosition;
+            private static float cachedGridSpacingX;
+            private static float cachedGridSpacingY;
+            private static bool initialized = false;
+
+            private static void EnsureInitialized()
+            {
+                if (initialized) return;
+                cachedGridStartPosition = new Vector2(ViewportWidth * 0.020f, ViewportHeight * 0.089f);
+                cachedGridSpacingX = Brick.Size.X + HorizontalGap;
+                cachedGridSpacingY = Brick.Size.Y + VerticalGap;  // Small vertical gap between rows
+                initialized = true;
+                GD.Print($"BrickGrid config: startPos={cachedGridStartPosition}, spacingX={cachedGridSpacingX}, spacingY={cachedGridSpacingY}");
+            }
+
             // Grid infrastructure configuration
             public const int GridRows = 8;
             public const int GridColumns = 8;
-            public const float HorizontalGap = 3f;  // Small gap between bricks
-            public static readonly Vector2 GridStartPosition = new Vector2(20, 65);
-            public static readonly float GridSpacingX = Brick.Size.X + HorizontalGap;  // Brick width + small gap
-            public static readonly float GridSpacingY = 20f;                           // Vertical spacing (Size.Y + gap)
+            public const float HorizontalGap = 2f;  // Pixel gap between bricks horizontally
+            public const float VerticalGap = 1f;    // Pixel gap between bricks vertically
+            
+            // Grid start position: left margin, below score display area
+            public static Vector2 GridStartPosition { get { EnsureInitialized(); return cachedGridStartPosition; } }
+            
+            // Grid spacing: brick size + gap
+            public static float GridSpacingX { get { EnsureInitialized(); return cachedGridSpacingX; } }
+            public static float GridSpacingY { get { EnsureInitialized(); return cachedGridSpacingY; } }
         }
         #endregion
     }

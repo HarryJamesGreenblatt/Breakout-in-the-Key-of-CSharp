@@ -24,21 +24,23 @@ namespace Breakout.Components
         #region Lifecycle
         public override void _Ready()
         {
-            // Create score label (top-left)
+            // Create score label (top-left, arcade-style: small, minimal)
             scoreLabel = new Label();
-            scoreLabel.Position = new Vector2(10, 10);
-            scoreLabel.Text = "Score: 0";
-            scoreLabel.AddThemeFontSizeOverride("font_size", 32);
+            scoreLabel.Position = new Vector2(5, 5);
+            scoreLabel.Text = "SCORE: 0";
+            scoreLabel.AddThemeFontSizeOverride("font_size", 14);
+            scoreLabel.AddThemeColorOverride("font_color", new Color(1, 1, 1, 1));  // White text
             AddChild(scoreLabel);
 
-            // Create lives label (top-right)
+            // Create lives label (top-right, arcade-style: small, minimal)
             livesLabel = new Label();
-            livesLabel.Position = new Vector2(Config.ViewportWidth - 200, 10);
-            livesLabel.Text = "Lives: 3";
-            livesLabel.AddThemeFontSizeOverride("font_size", 32);
+            livesLabel.Position = new Vector2(Config.ViewportWidth - 80, 5);
+            livesLabel.Text = "LIVES: 3";
+            livesLabel.AddThemeFontSizeOverride("font_size", 14);
+            livesLabel.AddThemeColorOverride("font_color", new Color(1, 1, 1, 1));  // White text
             AddChild(livesLabel);
 
-            GD.Print("GameUIComponent initialized");
+            GD.Print("UIComponent initialized (arcade-style)");
         }
         #endregion
 
@@ -49,7 +51,7 @@ namespace Breakout.Components
         /// </summary>
         public void OnScoreChanged(int newScore)
         {
-            scoreLabel.Text = $"Score: {newScore}";
+            scoreLabel.Text = $"SCORE: {newScore}";
         }
 
         /// <summary>
@@ -58,7 +60,7 @@ namespace Breakout.Components
         /// </summary>
         public void OnLivesChanged(int newLives)
         {
-            livesLabel.Text = $"Lives: {newLives}";
+            livesLabel.Text = $"LIVES: {newLives}";
         }
 
         /// <summary>
@@ -68,13 +70,14 @@ namespace Breakout.Components
         public void ShowGameOverMessage()
         {
             gameOverLabel = new Label();
-            gameOverLabel.Text = "GAME OVER\nPress ESC to exit";
-            gameOverLabel.AddThemeFontSizeOverride("font_size", 64);
+            gameOverLabel.Text = "GAME OVER";
+            gameOverLabel.AddThemeFontSizeOverride("font_size", 32);
+            gameOverLabel.AddThemeColorOverride("font_color", new Color(1, 1, 1, 1));  // White
             gameOverLabel.HorizontalAlignment = HorizontalAlignment.Center;
             gameOverLabel.VerticalAlignment = VerticalAlignment.Center;
             
             // Set size before positioning so we can calculate center correctly
-            gameOverLabel.CustomMinimumSize = new Vector2(600, 300);
+            gameOverLabel.CustomMinimumSize = new Vector2(300, 150);
             
             // Center the label by positioning it so its center is at viewport center
             // Position is top-left corner, so we subtract half the size to center it
