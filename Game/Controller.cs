@@ -56,7 +56,8 @@ namespace Breakout.Game
             // Wire brick destruction to BOTH game rules (speed/shrink) AND scoring
             brickGrid.BrickDestroyedWithColor += gameState.OnBrickDestroyed;    // Game rules (speed increases, paddle shrink)
             brickGrid.BrickDestroyedWithColor += gameState.AddScore;             // Scoring
-            brickGrid.BrickDestroyedWithColor += (color) => soundComponent.PlayBrickHit(color);  // Sound with polyphonic cracking
+            brickGrid.BrickDestroyedWithColor += (color) => uiComponent.FlashScoreForColor(color);     // UI flash by color
+            brickGrid.BrickDestroyedWithColor += (color) => soundComponent.PlayBrickHit(color);        // Sound with polyphonic cracking by color
 
             // Wire UI events
             gameState.ScoreChanged += uiComponent.OnScoreChanged;

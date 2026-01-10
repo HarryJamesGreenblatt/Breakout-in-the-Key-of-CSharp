@@ -19,28 +19,78 @@ namespace Breakout.Components
         private Label scoreLabel;
         private Label livesLabel;
         private Label gameOverLabel;
+        private Tween scoreFlashTween;
         #endregion
 
         #region Lifecycle
         public override void _Ready()
         {
-            // Create score label (top-left, arcade-style: larger, visible)
+            // Create bold sans-serif SystemFont for arcade-style text
+            var arcadeFont = new SystemFont();
+            arcadeFont.FontNames = new[] { "Arial", "Helvetica", "sans-serif" };
+            arcadeFont.FontWeight = 700;  // Bold
+
+            // Create score label (top-left with 15px padding)
             scoreLabel = new Label();
-            scoreLabel.Position = new Vector2(10, 5);
-            scoreLabel.Text = "SCORE: 0";
-            scoreLabel.AddThemeFontSizeOverride("font_size", 24);
+            scoreLabel.AnchorLeft = 0;
+            scoreLabel.AnchorRight = 0;
+            scoreLabel.AnchorTop = 0;
+            scoreLabel.AnchorBottom = 0;
+            scoreLabel.OffsetLeft = 15;   // 15px padding from left wall
+            scoreLabel.OffsetRight = 100; // Width constraint (~85px)
+            scoreLabel.OffsetTop = 25;    // 25px from top (below ceiling)
+            scoreLabel.OffsetBottom = 65;
+            scoreLabel.Text = "0";
+            scoreLabel.AddThemeFontSizeOverride("font_size", 48);
             scoreLabel.AddThemeColorOverride("font_color", new Color(1, 1, 1, 1));  // White text
+            scoreLabel.AddThemeFontOverride("font", arcadeFont);
             AddChild(scoreLabel);
 
-            // Create lives label (top-right, arcade-style: larger, visible)
+            // Create lives label (top-right with 15px padding)
             livesLabel = new Label();
-            livesLabel.Position = new Vector2(Config.ViewportWidth - 150, 5);
-            livesLabel.Text = "LIVES: 3";
-            livesLabel.AddThemeFontSizeOverride("font_size", 24);
+            livesLabel.AnchorLeft = 1;
+            livesLabel.AnchorRight = 1;
+            livesLabel.AnchorTop = 0;
+            livesLabel.AnchorBottom = 0;
+            livesLabel.OffsetLeft = -100; // 100px to the left from right edge
+            livesLabel.OffsetRight = -15; // 15px padding from right wall
+            livesLabel.OffsetTop = 25;    // 25px from top (below ceiling)
+            livesLabel.OffsetBottom = 65;
+            livesLabel.Text = "3";
+            livesLabel.AddThemeFontSizeOverride("font_size", 48);
             livesLabel.AddThemeColorOverride("font_color", new Color(1, 1, 1, 1));  // White text
+            livesLabel.AddThemeFontOverride("font", arcadeFont);
+            livesLabel.HorizontalAlignment = HorizontalAlignment.Right;
             AddChild(livesLabel);
 
-            GD.Print("UIComponent initialized (arcade-style)");
+            GD.Print("UIComponent initialized (bold sans-serif, symmetric 15px padding)");
+        }
+        #endregion
+
+        #region Animations
+        /// <summary>
+        /// Flash the score label based on brick color.
+        /// Red=4 flashes, Orange=3, Green=2, Yellow=1 (matches crack count).
+        /// </summary>
+        public void FlashScoreForColor(Models.BrickColor color)
+        {
+            int flashCount = color switch
+            {
+                Models.BrickColor.Red => 4,
+                Models.BrickColor.Orange => 3,
+                Models.BrickColor.Green => 2,
+                Models.BrickColor.Yellow => 1,
+                _ => 1
+            };
+
+            scoreFlashTween?.Kill();
+            scoreFlashTween = CreateTween();
+            
+            for (int i = 0; i < flashCount; i++)
+            {
+                scoreFlashTween.TweenProperty(scoreLabel, "modulate:a", 0.3f, 0.15f);
+                scoreFlashTween.TweenProperty(scoreLabel, "modulate:a", 1.0f, 0.15f);
+            }
         }
         #endregion
 
@@ -51,7 +101,7 @@ namespace Breakout.Components
         /// </summary>
         public void OnScoreChanged(int newScore)
         {
-            scoreLabel.Text = $"SCORE: {newScore}";
+            scoreLabel.Text = newScore.ToString().PadLeft(3, '0');
         }
 
         /// <summary>
@@ -60,7 +110,7 @@ namespace Breakout.Components
         /// </summary>
         public void OnLivesChanged(int newLives)
         {
-            livesLabel.Text = $"LIVES: {newLives}";
+            livesLabel.Text = $"{newLives}";
         }
 
         /// <summary>
@@ -69,10 +119,16 @@ namespace Breakout.Components
         /// </summary>
         public void ShowGameOverMessage()
         {
+            // Create bold sans-serif SystemFont for consistency
+            var arcadeFont = new SystemFont();
+            arcadeFont.FontNames = new[] { "Arial", "Helvetica", "sans-serif" };
+            arcadeFont.FontWeight = 700;  // Bold
+
             gameOverLabel = new Label();
             gameOverLabel.Text = "GAME OVER";
             gameOverLabel.AddThemeFontSizeOverride("font_size", 64);
             gameOverLabel.AddThemeColorOverride("font_color", new Color(1, 1, 1, 1));  // White
+            gameOverLabel.AddThemeFontOverride("font", arcadeFont);
             gameOverLabel.HorizontalAlignment = HorizontalAlignment.Center;
             gameOverLabel.VerticalAlignment = VerticalAlignment.Center;
             
