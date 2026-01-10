@@ -126,9 +126,8 @@ namespace Breakout.Components
             // Update position
             position += velocity * delta;
 
-            // Handle wall collisions
-            HandleWallBounceX();
-            HandleWallBounceY();
+            // Wall collisions now handled via Area2D collision events
+            // (no manual boundary checks needed)
 
             // Check out of bounds
             if (position.Y > Config.Ball.OutOfBoundsY)
@@ -175,6 +174,11 @@ namespace Breakout.Components
                 HandleBrickCollision(brick);
                 BounceOccurred?.Invoke("brick");
             }
+            else if (area.Name.ToString().Contains("Wall"))  // Detect walls by name (TopWall, LeftWall, RightWall)
+            {
+                HandleWallCollision(area);
+                WallHit?.Invoke();
+            }
         }
 
         /// <summary>
@@ -183,38 +187,6 @@ namespace Breakout.Components
         public void HandleCollisionExit(Area2D area)
         {
             activeCollisions.Remove(area);
-        }
-        #endregion
-
-        #region Private - Wall Collisions
-        private void HandleWallBounceX()
-        {
-            float ballRadius = ballSize.X / 2;
-
-            // Bounce off left wall (inner edge at x=0)
-            if (position.X + ballRadius < 0)
-            {
-                velocity.X = -velocity.X;
-                WallHit?.Invoke();
-            }
-            // Bounce off right wall (inner edge at x=ViewportWidth)
-            else if (position.X + ballRadius > Config.ViewportWidth)
-            {
-                velocity.X = -velocity.X;
-                WallHit?.Invoke();
-            }
-        }
-
-        private void HandleWallBounceY()
-        {
-            float ballRadius = ballSize.Y / 2;
-
-            // Bounce off ceiling (inner edge at y=0)
-            if (position.Y + ballRadius < 0)
-            {
-                velocity.Y = -velocity.Y;
-                CeilingHit?.Invoke();  // Emit event for game rules
-            }
         }
         #endregion
 
@@ -297,6 +269,35 @@ namespace Breakout.Components
 
             // Destroy the brick (emits signal for game rules)
             brick.Destroy();
+        }
+
+        /// <summary>
+        /// Handles collision with walls. Bounces ball appropriately based on wall type.
+        /// </summary>
+        private void HandleWallCollision(Area2D wall)
+        {
+            float ballRadius = ballSize.X / 2;
+            string wallName = wall.Name;
+
+            if (wallName == "TopWall")
+            {
+                // Bounce off ceiling
+                velocity.Y = -velocity.Y;
+                CeilingHit?.Invoke();
+                GD.Print("Bounce off ceiling");
+            }
+            else if (wallName == "LeftWall")
+            {
+                // Bounce off left wall
+                velocity.X = -velocity.X;
+                GD.Print("Bounce off left wall");
+            }
+            else if (wallName == "RightWall")
+            {
+                // Bounce off right wall
+                velocity.X = -velocity.X;
+                GD.Print("Bounce off right wall");
+            }
         }
         #endregion
 

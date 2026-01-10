@@ -61,9 +61,11 @@ namespace Breakout.Entities
             // Update position
             Position += new Vector2(velocityX * (float)delta, 0);
             
-            // Constrain to bounds
+            // Constrain to bounds based on current paddle size (not cached original size)
+            float minX = 0;
+            float maxX = Config.ViewportWidth - size.X;  // Use current size, not cached size
             Position = new Vector2(
-                Mathf.Clamp(Position.X, Config.Paddle.MinX, Config.Paddle.MaxX),
+                Mathf.Clamp(Position.X, minX, maxX),
                 Position.Y
             );
         }
@@ -86,7 +88,12 @@ namespace Breakout.Entities
         /// </summary>
         public void Shrink()
         {
+            float originalWidth = size.X;
             size = new Vector2(size.X * 0.5f, size.Y);
+            float widthDifference = originalWidth - size.X;
+            
+            // Move paddle right by half the width difference to center the shrink
+            Position += new Vector2(widthDifference / 2, 0);
             
             // Update visual
             var visual = GetChild(1) as ColorRect;  // ColorRect is second child (after CollisionShape2D)
@@ -95,11 +102,12 @@ namespace Breakout.Entities
                 visual.Size = size;
             }
 
-            // Update collision shape
+            // Update collision shape - keep position centered
             var collisionShape = GetChild(0) as CollisionShape2D;  // CollisionShape2D is first child
             if (collisionShape != null)
             {
                 collisionShape.Shape = new RectangleShape2D { Size = size };
+                collisionShape.Position = size / 2;  // Center the collision shape
             }
 
             GD.Print($"Paddle shrunk to {size.X}x{size.Y}");

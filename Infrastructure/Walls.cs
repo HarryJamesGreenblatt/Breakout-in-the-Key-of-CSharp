@@ -12,18 +12,13 @@ namespace Breakout.Infrastructure
     {
         #region Wall Definition
         /// <summary>
-        /// A single wall with collision and visual representation rendered as a ColorRect.
+        /// A single wall with collision and visual representation.
         /// </summary>
-        private partial class Wall : StaticBody2D
+        private partial class Wall : Area2D
         {
             /// <summary>
             /// Initializes a new instance of the <see cref="Wall"/> class.
             /// </summary>
-            /// <param name="name"></param>
-            /// <param name="position"></param>
-            /// <param name="size"></param>
-            /// <param name="collisionOffset"></param>
-            /// <param name="color"></param>
             public Wall(string name, Vector2 position, Vector2 size, Vector2 collisionOffset, Color color)
             {
                 Name = name;
@@ -49,17 +44,42 @@ namespace Breakout.Infrastructure
                 CollisionMask = Config.Walls.CollisionMask;
             }
         }
+
+        /// <summary>
+        /// A visual-only color marker for wall segments that align with bricks or paddle.
+        /// No collision geometry - purely visual overlay.
+        /// </summary>
+        private partial class WallColorMarker : Node2D
+        {
+            /// <summary>
+            /// Initializes a new instance of the <see cref="WallColorMarker"/> class.
+            /// </summary>
+            public WallColorMarker(Vector2 position, Vector2 size, Color color)
+            {
+                Position = position;
+
+                // Visual representation only (no collision)
+                var rect = new ColorRect
+                {
+                    Position = Vector2.Zero,
+                    Size = size,
+                    Color = color,
+                    MouseFilter = Control.MouseFilterEnum.Ignore
+                };
+                AddChild(rect);
+            }
+        }
         #endregion
 
         #region Game Behavior
         public override void _Ready()
         {
-            // Create boundary walls - base color is whitesmoke
-            var topWallSize = new Vector2(Config.ViewportWidth, Config.WallThickness);
+            // Create boundary walls (Area2D for physics collisions only)
+            var topWallSize = new Vector2(Config.ViewportWidth, Config.CeilingThickness);
             var verticalWallSize = new Vector2(Config.WallThickness, Config.ViewportHeight);
             var whitesmoke = new Color(0.96f, 0.96f, 0.96f, 1);  // whitesmoke
 
-            // Top wall: whitesmoke (no brick row above it)
+            // Top wall: whitesmoke (no brick row above it), double thickness
             var topWall = new Wall("TopWall", new Vector2(0, 0), topWallSize, topWallSize / 2, whitesmoke);
             AddChild(topWall);
             
@@ -71,17 +91,17 @@ namespace Breakout.Infrastructure
             var rightWall = new Wall("RightWall", new Vector2(Config.ViewportWidth - Config.WallThickness, 0), verticalWallSize, verticalWallSize / 2, whitesmoke);
             AddChild(rightWall);
 
-            // Create colored wall overlays for brick-aligned segments and paddle area
-            CreateColoredWallOverlays();
+            // Create separate visual marker nodes for colored overlays
+            CreateColoredWallMarkers();
         }
 
-        private void CreateColoredWallOverlays()
+        private void CreateColoredWallMarkers()
         {
             float segmentHeight = Config.Brick.Size.Y + Config.BrickGrid.VerticalGap;
             float startY = Config.BrickGrid.GridStartPosition.Y;
             float wallThickness = Config.WallThickness;
 
-            // Create overlays for brick-aligned segments
+            // Create visual markers for brick-aligned segments
             for (int row = 0; row < Config.BrickGrid.GridRows; row++)
             {
                 // Get the color for this row
@@ -92,55 +112,44 @@ namespace Breakout.Infrastructure
                 // Calculate Y position for this segment
                 float segmentY = startY + (row * segmentHeight);
 
-                // Left wall overlay (matches brick row color)
-                var leftOverlay = new ColorRect
-                {
-                    Position = new Vector2(0, segmentY),
-                    Size = new Vector2(wallThickness, segmentHeight),
-                    Color = segmentColor,
-                    MouseFilter = Control.MouseFilterEnum.Ignore
-                };
-                AddChild(leftOverlay);
+                // Left and right wall color markers
+                var leftMarker = new WallColorMarker(
+                    new Vector2(0, segmentY),
+                    new Vector2(wallThickness, segmentHeight),
+                    segmentColor
+                );
+                AddChild(leftMarker);
 
-                // Right wall overlay (matches brick row color)
-                var rightOverlay = new ColorRect
-                {
-                    Position = new Vector2(Config.ViewportWidth - wallThickness, segmentY),
-                    Size = new Vector2(wallThickness, segmentHeight),
-                    Color = segmentColor,
-                    MouseFilter = Control.MouseFilterEnum.Ignore
-                };
-                AddChild(rightOverlay);
+                var rightMarker = new WallColorMarker(
+                    new Vector2(Config.ViewportWidth - wallThickness, segmentY),
+                    new Vector2(wallThickness, segmentHeight),
+                    segmentColor
+                );
+                AddChild(rightMarker);
             }
 
-            // Create paddle-aligned wall overlay at bottom
+            // Create visual markers for paddle-aligned area
             float paddleY = Config.Paddle.Position.Y;
             float wallBottomY = Config.ViewportHeight;
             float paddleSegmentHeight = wallBottomY - paddleY;
 
             if (paddleSegmentHeight > 0)
             {
-                var paddleColor = Config.Paddle.Color;  // Blue
+                var paddleColor = Config.Paddle.Color;  // Sky blue
 
-                // Left wall paddle segment
-                var leftPaddleOverlay = new ColorRect
-                {
-                    Position = new Vector2(0, paddleY),
-                    Size = new Vector2(wallThickness, paddleSegmentHeight),
-                    Color = paddleColor,
-                    MouseFilter = Control.MouseFilterEnum.Ignore
-                };
-                AddChild(leftPaddleOverlay);
+                var leftPaddleMarker = new WallColorMarker(
+                    new Vector2(0, paddleY),
+                    new Vector2(wallThickness, paddleSegmentHeight),
+                    paddleColor
+                );
+                AddChild(leftPaddleMarker);
 
-                // Right wall paddle segment
-                var rightPaddleOverlay = new ColorRect
-                {
-                    Position = new Vector2(Config.ViewportWidth - wallThickness, paddleY),
-                    Size = new Vector2(wallThickness, paddleSegmentHeight),
-                    Color = paddleColor,
-                    MouseFilter = Control.MouseFilterEnum.Ignore
-                };
-                AddChild(rightPaddleOverlay);
+                var rightPaddleMarker = new WallColorMarker(
+                    new Vector2(Config.ViewportWidth - wallThickness, paddleY),
+                    new Vector2(wallThickness, paddleSegmentHeight),
+                    paddleColor
+                );
+                AddChild(rightPaddleMarker);
             }
         }
         #endregion

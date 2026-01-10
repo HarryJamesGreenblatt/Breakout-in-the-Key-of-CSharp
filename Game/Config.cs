@@ -50,6 +50,7 @@ namespace Breakout.Game
 
         #region Infrastructure
         public const float WallThickness = 10f;
+        public const float CeilingThickness = 20f;  // Ceiling is twice wall thickness
 
         public static class Walls
         {
@@ -80,7 +81,7 @@ namespace Breakout.Game
 
             public static Vector2 Position { get { EnsureInitialized(); return cachedPosition; } }
             public static Vector2 Size { get { EnsureInitialized(); return cachedSize; } }
-            public static readonly Color Color = new Color(0, 0, 1, 1);  // Blue
+            public static readonly Color Color = new Color(0.4f, 0.8f, 1f, 1);  // Sky blue / robin's egg
             public static float Speed { get { EnsureInitialized(); return cachedSpeed; } }
 
             public static float MinX => 0;
