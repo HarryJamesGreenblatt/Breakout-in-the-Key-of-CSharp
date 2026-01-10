@@ -58,16 +58,10 @@ namespace Breakout.Game
 
         public static class Brick
         {
-            // Grid configuration
-            public const int GridRows = 8;
-            public const int GridColumns = 8;
-            public const float HorizontalGap = 3f;  // Small gap between bricks
-
-            // Brick width scales to fill viewport width with small gaps: (ViewportWidth - 2*margin - gaps) / GridColumns
+            // Brick entity configuration
             public static readonly Vector2 Size = ComputeBrickSize();
-            public static readonly Vector2 GridStartPosition = new Vector2(20, 40);
-            public static readonly float GridSpacingX = Size.X + HorizontalGap;  // Brick width + small gap
-            public static readonly float GridSpacingY = 20f;                      // Vertical spacing (Size.Y + gap)
+            public const int CollisionLayer = 1;
+            public const int CollisionMask = 1;
 
             /// <summary>
             /// Computes brick size to fill viewport width with small gaps between bricks.
@@ -76,14 +70,22 @@ namespace Breakout.Game
             private static Vector2 ComputeBrickSize()
             {
                 float margin = 20f;
-                float totalHorizontalGaps = (GridColumns - 1) * HorizontalGap;
+                float totalHorizontalGaps = (BrickGrid.GridColumns - 1) * BrickGrid.HorizontalGap;
                 float availableWidth = ViewportWidth - 2 * margin - totalHorizontalGaps;
-                float brickWidth = availableWidth / GridColumns;
+                float brickWidth = availableWidth / BrickGrid.GridColumns;
                 return new Vector2(brickWidth, 15f);
             }
+        }
 
-            public const int CollisionLayer = 1;
-            public const int CollisionMask = 1;
+        public static class BrickGrid
+        {
+            // Grid infrastructure configuration
+            public const int GridRows = 8;
+            public const int GridColumns = 8;
+            public const float HorizontalGap = 3f;  // Small gap between bricks
+            public static readonly Vector2 GridStartPosition = new Vector2(20, 65);
+            public static readonly float GridSpacingX = Brick.Size.X + HorizontalGap;  // Brick width + small gap
+            public static readonly float GridSpacingY = 20f;                           // Vertical spacing (Size.Y + gap)
         }
         #endregion
     }

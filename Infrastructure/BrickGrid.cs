@@ -56,16 +56,16 @@ namespace Breakout.Infrastructure
         public void InstantiateGrid(Godot.Node parentNode)
         {
             int brickId = 0;
-            Vector2 gridStart = Breakout.Game.Config.Brick.GridStartPosition;
+            Vector2 gridStart = Breakout.Game.Config.BrickGrid.GridStartPosition;
 
-            for (int row = 0; row < Breakout.Game.Config.Brick.GridRows; row++)
+            for (int row = 0; row < Breakout.Game.Config.BrickGrid.GridRows; row++)
             {
-                for (int col = 0; col < Breakout.Game.Config.Brick.GridColumns; col++)
+                for (int col = 0; col < Breakout.Game.Config.BrickGrid.GridColumns; col++)
                 {
                     // Calculate brick position
                     Vector2 position = gridStart + new Vector2(
-                        col * Breakout.Game.Config.Brick.GridSpacingX,
-                        row * Breakout.Game.Config.Brick.GridSpacingY
+                        col * Breakout.Game.Config.BrickGrid.GridSpacingX,
+                        row * Breakout.Game.Config.BrickGrid.GridSpacingY
                     );
 
                     // Get brick color for this row and fetch its config
@@ -106,7 +106,7 @@ namespace Breakout.Infrastructure
             if (brickGrid.ContainsKey(brickId))
             {
                 // Compute brick row to determine color
-                int gridColumns = Breakout.Game.Config.Brick.GridColumns;
+                int gridColumns = Breakout.Game.Config.BrickGrid.GridColumns;
                 int brickRow = brickId / gridColumns;
                 BrickColor color = BrickColorUtility.GetColorForRow(brickRow);
 
