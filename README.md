@@ -73,7 +73,7 @@ Rather than providing complete code, this project **implements features iterativ
    - `Brick` — Has `Destroy()` method that emits `BrickDestroyed` signal and removes entity
 
 5. **Game/** (Orchestration + Config):
-   - `Controller` — Pure signal wiring; zero business logic; instantiates via EntityFactoryUtility
+   - `Controller` — Pure instantiation and orchestration; delegates all signal wiring to SignalWiringUtility; zero business logic
    - `Config` — Centralized constants; split into `Config.Brick` (entity) and `Config.BrickGrid` (infrastructure)
 
 **Signal Flow Example:**
@@ -150,6 +150,7 @@ dotnet build
 
 **Utilities/**
 - **EntityFactoryUtility.cs** — Factory for entity-component pair instantiation; creates all game entities
+- **SignalWiringUtility.cs** — Stateless utility for all signal orchestration; 7 focused methods (one per concern domain)
 - **BrickColorUtility.cs** — Color-to-config lookup (Red/Orange/Green/Yellow)
 
 **Entities/**
@@ -341,6 +342,39 @@ docs: documentation
 - ✅ Color-synchronized audio/visual feedback without state drilling
 - ✅ Deferred paddle shrink execution avoids physics query conflicts
 - ✅ **MVP is fully playable with arcade-authentic physics and polish**
+
+### Session 3 (Continued): Signal Wiring Refactoring (January 10, 2026)
+
+**Phase 5: Separation of Concerns in Signal Orchestration**
+- **Problem:** Controller._Ready() had ~80 lines of mixed signal wiring scattered across multiple domains (game rules, brick events, UI, ball physics, sound, game state)
+- **Solution:** Created `SignalWiringUtility.cs` (stateless utility following EntityFactoryUtility pattern) with 7 focused static methods:
+  - `WireGameRules()` — Speed increases, paddle shrinking
+  - `WireBrickEvents()` — Destruction → game rules/scoring/UI/sound/level complete
+  - `WireUIEvents()` — Score display, lives display, flashing animations, game over message
+  - `WireBallEvents()` — Ball collisions → game state (lives management)
+  - `WireBallSoundEvents()` — Ball collisions → audio feedback
+  - `WireGameStateSoundEvents()` — Game state transitions → audio feedback
+  - `WireGameOverState()` — Game over → entity disabling (ball/paddle)
+- **Refactored Controller:**
+  - Reduced _Ready() from ~80 lines of wiring to ~20 lines of utility method calls
+  - Now follows true separation of concerns: pure instantiation + pure orchestration
+  - Zero signal handling logic in Controller
+  - All wiring concerns are visualized in one utility file (single place to see all connections)
+- **Architecture Benefits:**
+  - Each utility method handles exactly one domain (no mixed concerns)
+  - Each method is self-contained and testable in isolation
+  - Zero state ownership (stateless utility)
+  - No hidden dependencies or interdependencies between wiring methods
+  - Follows same pattern as EntityFactoryUtility (established precedent)
+  - Controller becomes clean orchestrator (matches Nystrom's vision)
+
+**Result:**
+- ✅ Signal orchestration extracted to focused, stateless utility
+- ✅ Controller is now truly thin (instantiation + 7 orchestration calls)
+- ✅ All signal connections visible in one place (SignalWiringUtility) for easy comprehension
+- ✅ Each concern (game rules, UI, sound, etc.) handled by separate utility method
+- ✅ Architecture patterns fully applied (Component, Factory, Utility patterns)
+- ✅ **Code is now elegant, maintainable, and architecturally sound**
 
 ---
 
