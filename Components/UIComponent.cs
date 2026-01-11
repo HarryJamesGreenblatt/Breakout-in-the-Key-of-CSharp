@@ -21,6 +21,7 @@ namespace Breakout.Components
         private Label livesLabel;
         private Label gameOverLabel;
         private Tween scoreFlashTween;
+        private Tween livesFlashTween;
         #endregion
 
         #region Lifecycle
@@ -133,6 +134,31 @@ namespace Breakout.Components
                 scoreFlashTween.TweenProperty(scoreLabel, "modulate:a", 0.3f, 0.15f);
                 scoreFlashTween.TweenProperty(scoreLabel, "modulate:a", 1.0f, 0.15f);
             }
+        }
+
+        /// <summary>
+        /// Flash the lives label once when a life is lost.
+        /// Single brief flash for visual feedback.
+        /// </summary>
+        public void FlashLivesLost()
+        {
+            livesFlashTween?.Kill();
+            livesFlashTween = CreateTween();
+            livesFlashTween.TweenProperty(livesLabel, "modulate:a", 0.3f, 0.15f);
+            livesFlashTween.TweenProperty(livesLabel, "modulate:a", 1.0f, 0.15f);
+        }
+
+        /// <summary>
+        /// Flash the lives label indefinitely when all lives are lost.
+        /// Warning indicator until game over screen is shown.
+        /// </summary>
+        public void FlashLivesIndefinitely()
+        {
+            livesFlashTween?.Kill();
+            livesFlashTween = CreateTween();
+            livesFlashTween.SetLoops();  // Repeat forever
+            livesFlashTween.TweenProperty(livesLabel, "modulate:a", 0.3f, 0.15f);
+            livesFlashTween.TweenProperty(livesLabel, "modulate:a", 1.0f, 0.15f);
         }
         #endregion
 

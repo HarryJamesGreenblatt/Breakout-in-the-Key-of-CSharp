@@ -63,6 +63,10 @@ namespace Breakout.Game
             // Wire UI events
             gameState.ScoreChanged += uiComponent.OnScoreChanged;
             gameState.LivesChanged += uiComponent.OnLivesChanged;
+            gameState.LivesChanged += (lives) => {
+                if (lives > 0) uiComponent.FlashLivesLost();         // Single flash when life is lost
+                else if (lives <= 0) uiComponent.FlashLivesIndefinitely();  // Infinite flash when game over imminent
+            };
 
             // Wire state machine (game-over detection)
             gameState.LivesChanged += (lives) => {
