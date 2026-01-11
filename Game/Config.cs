@@ -191,6 +191,43 @@ namespace Breakout.Game
             public static float GridSpacingX { get { EnsureInitialized(); return cachedGridSpacingX; } }
             public static float GridSpacingY { get { EnsureInitialized(); return cachedGridSpacingY; } }
         }
+
+        /// <summary>
+        /// UI configuration: responsive font sizing based on viewport.
+        /// Font sizes scale proportionally to viewport height, ensuring legibility across screen sizes.
+        /// Similar to CSS rem units (relative to viewport), but using height as the base.
+        /// </summary>
+        public static class UI
+        {
+            // Cache computed values
+            private static int cachedScoreLabelFontSize;
+            private static int cachedGameOverFontSize;
+            private static bool initialized = false;
+
+            private static void EnsureInitialized()
+            {
+                if (initialized) return;
+                // Score/Lives labels: smaller for portrait viewport (target: 24-28px at 640h)
+                cachedScoreLabelFontSize = (int)(ViewportHeight * 0.04f);  // 4% of viewport height (~25px at 640h)
+                // Game over label: 6% of viewport height (larger, more prominent)
+                cachedGameOverFontSize = (int)(ViewportHeight * 0.06f);    // 6% of viewport height (~38px at 640h)
+                initialized = true;
+                GD.Print($"UI config: scoreLabelFontSize={cachedScoreLabelFontSize}, gameOverFontSize={cachedGameOverFontSize}");
+            }
+
+            /// <summary>
+            /// Font size for score and lives labels (HUD).
+            /// Scales to 4% of viewport height for responsive sizing (target: 25-28px).
+            /// Similar to CSS "rem" concept: responsive to viewport.
+            /// </summary>
+            public static int ScoreLabelFontSize { get { EnsureInitialized(); return cachedScoreLabelFontSize; } }
+
+            /// <summary>
+            /// Font size for game over message.
+            /// Scales to 8% of viewport height for prominence (target: 50-60px).
+            /// </summary>
+            public static int GameOverFontSize { get { EnsureInitialized(); return cachedGameOverFontSize; } }
+        }
         #endregion
     }
 }

@@ -41,7 +41,7 @@ namespace Breakout.Components
             scoreLabel.OffsetTop = 25;    // 25px from top (below ceiling)
             scoreLabel.OffsetBottom = 65;
             scoreLabel.Text = "000";  // Initialize with 3-digit zero-padding
-            scoreLabel.AddThemeFontSizeOverride("font_size", 48);
+            scoreLabel.AddThemeFontSizeOverride("font_size", Config.UI.ScoreLabelFontSize);
             scoreLabel.AddThemeColorOverride("font_color", new Color(1, 1, 1, 1));  // White text
             scoreLabel.AddThemeFontOverride("font", arcadeFont);
             AddChild(scoreLabel);
@@ -57,7 +57,7 @@ namespace Breakout.Components
             livesLabel.OffsetTop = 25;    // 25px from top (below ceiling)
             livesLabel.OffsetBottom = 65;
             livesLabel.Text = "3";
-            livesLabel.AddThemeFontSizeOverride("font_size", 48);
+            livesLabel.AddThemeFontSizeOverride("font_size", Config.UI.ScoreLabelFontSize);
             livesLabel.AddThemeColorOverride("font_color", new Color(1, 1, 1, 1));  // White text
             livesLabel.AddThemeFontOverride("font", arcadeFont);
             livesLabel.HorizontalAlignment = HorizontalAlignment.Right;
@@ -192,7 +192,7 @@ namespace Breakout.Components
 
             gameOverLabel = new Label();
             gameOverLabel.Text = "GAME OVER";
-            gameOverLabel.AddThemeFontSizeOverride("font_size", 64);
+            gameOverLabel.AddThemeFontSizeOverride("font_size", Config.UI.GameOverFontSize);
             gameOverLabel.AddThemeColorOverride("font_color", new Color(1, 1, 1, 1));  // White
             gameOverLabel.AddThemeFontOverride("font", arcadeFont);
             gameOverLabel.HorizontalAlignment = HorizontalAlignment.Center;
