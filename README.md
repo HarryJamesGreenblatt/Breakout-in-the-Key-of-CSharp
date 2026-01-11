@@ -61,7 +61,7 @@ Rather than providing complete code, this project **implements features iterativ
 
 2. **Infrastructure/** (World Structure) — Entity collections forming environment:
    - `BrickGrid` — Brick grid management and destruction tracking
-   - `Walls` — Stateless boundary nodes
+   - `Walls` — Container that instantiates and manages Wall entities
 
 3. **Utilities/** (Helpers) — Factory and lookup functions:
    - `EntityFactoryUtility` — Factory for entity-component pair instantiation
@@ -71,6 +71,7 @@ Rather than providing complete code, this project **implements features iterativ
    - `Ball` — Delegates to PhysicsComponent; emits `BallHitPaddle`, `BallOutOfBounds`, `BallHitCeiling` signals
    - `Paddle` — Input handling, movement bounds, `Shrink()` action method
    - `Brick` — Has `Destroy()` method that emits `BrickDestroyed` signal and removes entity
+   - `Wall` — Immobile boundary wall segment with collision and visual representation
 
 5. **Game/** (Orchestration + Config):
    - `Controller` — Pure instantiation and orchestration; delegates all signal wiring to SignalWiringUtility; zero business logic

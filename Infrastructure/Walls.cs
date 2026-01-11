@@ -1,4 +1,5 @@
 using Breakout.Game;
+using Breakout.Entities;
 using Breakout.Utilities;
 using Godot;
 
@@ -6,45 +7,11 @@ namespace Breakout.Infrastructure
 {
     /// <summary>
     /// Container for immobile boundary walls (left, right, top).
-    /// Creates walls programmatically with collision and visual components.
+    /// Creates wall entities programmatically and manages colored visual overlays.
     /// </summary>
     public partial class Walls : Node
     {
-        #region Wall Definition
-        /// <summary>
-        /// A single wall with collision and visual representation.
-        /// </summary>
-        private partial class Wall : Area2D
-        {
-            /// <summary>
-            /// Initializes a new instance of the <see cref="Wall"/> class.
-            /// </summary>
-            public Wall(string name, Vector2 position, Vector2 size, Vector2 collisionOffset, Color color)
-            {
-                Name = name;
-                Position = position;
-
-                // Collision shape with explicit offset parameter
-                var collisionShape = new CollisionShape2D();
-                collisionShape.Position = collisionOffset;
-                collisionShape.Shape = new RectangleShape2D { Size = size };
-                AddChild(collisionShape);
-
-                // Visual representation
-                var visual = new ColorRect
-                {
-                    Position = Vector2.Zero,
-                    Size = size,
-                    Color = color
-                };
-                AddChild(visual);
-
-                // Collision setup from config
-                CollisionLayer = Config.Walls.CollisionLayer;
-                CollisionMask = Config.Walls.CollisionMask;
-            }
-        }
-
+        #region WallColorMarker Definition
         /// <summary>
         /// A visual-only color marker for wall segments that align with bricks or paddle.
         /// No collision geometry - purely visual overlay.
