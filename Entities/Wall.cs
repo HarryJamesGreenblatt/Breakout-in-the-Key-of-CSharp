@@ -11,6 +11,7 @@ namespace Breakout.Entities
     /// </summary>
     public partial class Wall : Area2D
     {
+        #region Constructor
         /// <summary>
         /// Initializes a new instance of the <see cref="Wall"/> class.
         /// </summary>
@@ -44,4 +45,5 @@ namespace Breakout.Entities
             CollisionMask = Config.Walls.CollisionMask;
         }
     }
+    #endregion
 }
