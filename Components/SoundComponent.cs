@@ -1,7 +1,7 @@
 using Godot;
 using System;
 using System.Collections.Generic;
-using Breakout.Models;
+using Breakout.Utilities;
 
 namespace Breakout.Components
 {

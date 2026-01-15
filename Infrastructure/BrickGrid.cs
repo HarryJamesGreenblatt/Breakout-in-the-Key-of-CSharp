@@ -1,6 +1,5 @@
 using Godot;
 using Breakout.Entities;
-using Breakout.Models;
 using Breakout.Utilities;
 using System;
 using System.Collections.Generic;
@@ -35,7 +34,7 @@ namespace Breakout.Infrastructure
         /// Emitted when a brick is destroyed.
         /// Passes the brick color for game rules (speed increases, scoring).
         /// </summary>
-        public event Action<Models.BrickColor> BrickDestroyedWithColor;
+        public event Action<Utilities.BrickColor> BrickDestroyedWithColor;
 
         /// <summary>
         /// Emitted when all bricks are destroyed (grid becomes empty).

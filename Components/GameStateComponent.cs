@@ -1,5 +1,6 @@
 using Godot;
 using System;
+using Breakout.Utilities;
 
 namespace Breakout.Components
 {
@@ -118,7 +119,7 @@ namespace Breakout.Components
         /// Emitted when a brick is destroyed (for scoring).
         /// Includes brick color enum to look up point value.
         /// </summary>
-        public event Action<Models.BrickColor> BrickDestroyed;
+        public event Action<BrickColor> BrickDestroyed;
 
         /// <summary>
         /// Emitted when game state transitions.
@@ -151,7 +152,7 @@ namespace Breakout.Components
         /// Called when a brick is destroyed.
         /// Tracks hit count, applies speed rules, checks paddle shrink condition.
         /// </summary>
-        public void OnBrickDestroyed(Models.BrickColor color)
+        public void OnBrickDestroyed(BrickColor color)
         {
             totalHits++;
             BrickDestroyed?.Invoke(color);
@@ -177,14 +178,14 @@ namespace Breakout.Components
             }
 
             // Rule 3: Speed up on contact with orange or red rows (once per color)
-            if (color == Models.BrickColor.Orange && !speedOrangeRowApplied)
+            if (color == BrickColor.Orange && !speedOrangeRowApplied)
             {
                 SpeedIncreaseRequired?.Invoke(1.15f);
                 PaddleSpeedIncreaseRequired?.Invoke(1.15f);
                 speedOrangeRowApplied = true;
                 GD.Print("Speed increase on first orange row contact: 15% faster");
             }
-            else if (color == Models.BrickColor.Red && !speedRedRowApplied)
+            else if (color == BrickColor.Red && !speedRedRowApplied)
             {
                 SpeedIncreaseRequired?.Invoke(1.15f);
                 PaddleSpeedIncreaseRequired?.Invoke(1.15f);
@@ -194,7 +195,7 @@ namespace Breakout.Components
 
             // Canonical Breakout paddle shrink rule:
             // Set flag when red row is hit (only if paddle hasn't already shrunk)
-            if (color == Models.BrickColor.Red && !paddleHasShrunk)
+            if (color == BrickColor.Red && !paddleHasShrunk)
             {
                 redRowBroken = true;
                 GD.Print("Red row broken. Paddle will shrink on next ceiling hit.");
@@ -220,9 +221,9 @@ namespace Breakout.Components
         /// Called when ball hits a brick (for scoring).
         /// Looks up point value from BrickColorUtility and updates score.
         /// </summary>
-        public void AddScore(Models.BrickColor color)
+        public void AddScore(BrickColor color)
         {
-            int points = Utilities.BrickColorUtility.GetConfig(color).Points;
+            int points = BrickColorUtility.GetConfig(color).Points;
             score += points;
             ScoreChanged?.Invoke(score);
             GD.Print($"Score +{points}. Total: {score}");

@@ -1,6 +1,7 @@
 using Godot;
 using System;
 using Breakout.Game;
+using Breakout.Utilities;
 
 namespace Breakout.Components
 {
@@ -115,14 +116,14 @@ namespace Breakout.Components
         /// Flash the score label based on brick color.
         /// Red=4 flashes, Orange=3, Green=2, Yellow=1 (matches crack count).
         /// </summary>
-        public void FlashScoreForColor(Models.BrickColor color)
+        public void FlashScoreForColor(BrickColor color)
         {
             int flashCount = color switch
             {
-                Models.BrickColor.Red => 4,
-                Models.BrickColor.Orange => 3,
-                Models.BrickColor.Green => 2,
-                Models.BrickColor.Yellow => 1,
+                BrickColor.Red => 4,
+                BrickColor.Orange => 3,
+                BrickColor.Green => 2,
+                BrickColor.Yellow => 1,
                 _ => 1
             };
 
