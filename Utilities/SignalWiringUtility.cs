@@ -51,7 +51,8 @@ namespace Breakout.Utilities
                 else if (lives <= 0) ui.FlashLivesIndefinitely();
             };
 
-            // Game over state transition
+            // Game state transitions
+            gameState.StateChanged += ui.OnGameStateChanged;
             gameState.LivesChanged += (lives) => {
                 if (lives <= 0) gameState.SetState(GameStateComponent.GameState.GameOver);
             };

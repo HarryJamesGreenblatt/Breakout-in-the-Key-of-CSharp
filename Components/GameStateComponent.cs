@@ -301,6 +301,29 @@ namespace Breakout.Components
         /// Check if game is actively playing (not paused or over).
         /// </summary>
         public bool IsPlaying() => currentState == GameState.Playing;
+
+        /// <summary>
+        /// Reset all game state to initial values.
+        /// Called when restarting the game.
+        /// </summary>
+        public void Reset()
+        {
+            score = 0;
+            lives = 3;
+            totalHits = 0;
+            speedMilestone4Applied = false;
+            speedMilestone12Applied = false;
+            speedOrangeRowApplied = false;
+            speedRedRowApplied = false;
+            paddleHasShrunk = false;
+            redRowBroken = false;
+            currentState = GameState.Playing;
+
+            ScoreChanged?.Invoke(score);
+            LivesChanged?.Invoke(lives);
+            StateChanged?.Invoke(currentState);  // Notify listeners (e.g., UIComponent) of state transition
+            GD.Print("GameState reset to initial values");
+        }
         #endregion
     }
 }

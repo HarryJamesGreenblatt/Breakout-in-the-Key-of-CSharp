@@ -169,6 +169,36 @@ namespace Breakout.Components
             activeCollisions.Clear();
             GD.Print($"Ball reset. Speed multiplier: {currentSpeedMultiplier}x, launch angle: {randomAngleDegrees:F1}°");
         }
+
+        /// <summary>
+        /// Reset physics state for game restart.
+        /// Clears speed multiplier and all state to initial values.
+        /// Used when restarting the entire game (not just ball reset).
+        /// Reconstructs velocity with randomized launch angle for variety.
+        /// </summary>
+        public void ResetForGameRestart()
+        {
+            currentSpeedMultiplier = 1.0f;
+            position = initialPosition;
+            
+            // Get speed magnitude (now at 1.0x multiplier)
+            float speed = initialVelocity.Length() * currentSpeedMultiplier;
+            
+            // Launch angle constrained between 60° and 120° (mostly downward toward paddle)
+            float minAngleDegrees = 60f;
+            float maxAngleDegrees = 120f;
+            float randomAngleDegrees = Mathf.Lerp(minAngleDegrees, maxAngleDegrees, (float)GD.Randf());
+            float angleRadians = Mathf.DegToRad(randomAngleDegrees);
+            
+            // Reconstruct velocity with constrained angle but same speed
+            velocity = new Vector2(
+                Mathf.Cos(angleRadians) * speed,
+                Mathf.Sin(angleRadians) * speed
+            );
+            
+            activeCollisions.Clear();
+            GD.Print($"PhysicsComponent reset for game restart: launch angle {randomAngleDegrees:F1}°, velocity {velocity}");
+        }
         #endregion
 
         #region Public API - Collision Handling

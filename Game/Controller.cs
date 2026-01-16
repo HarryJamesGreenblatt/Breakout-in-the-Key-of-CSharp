@@ -1,5 +1,7 @@
 using Breakout.Components;
 using Breakout.Utilities;
+using Breakout.Entities;
+using Breakout.Infrastructure;
 using Godot;
 
 namespace Breakout.Game
@@ -21,6 +23,10 @@ namespace Breakout.Game
     {
         #region State
         private GameStateComponent gameState;
+        private BrickGrid brickGrid;
+        private Paddle paddle;
+        private Ball ball;
+        private PhysicsComponent ballPhysics;
         #endregion
 
         #region Game Loop
@@ -29,9 +35,9 @@ namespace Breakout.Game
             // Instantiate all components and entities
             var entityFactory = new EntityFactoryUtility();
             gameState = entityFactory.CreateGameState();
-            var brickGrid = entityFactory.CreateBrickGrid(this);
-            var paddle = entityFactory.CreatePaddle(this);
-            var (ball, ballPhysics) = entityFactory.CreateBallWithPhysics(this);
+            brickGrid = entityFactory.CreateBrickGrid(this);
+            paddle = entityFactory.CreatePaddle(this);
+            (ball, ballPhysics) = entityFactory.CreateBallWithPhysics(this);
             entityFactory.CreateWalls(this);
 
             var uiComponent = new UIComponent();
@@ -54,11 +60,48 @@ namespace Breakout.Game
 
         public override void _Process(double delta)
         {
+            // Handle restart on game over (R key)
+            if (Input.IsActionJustPressed("ui_accept") && gameState.GetState() == GameStateComponent.GameState.GameOver)
+            {
+                RestartGame();
+            }
+
             // Handle ESC key to exit on game over
             if (Input.IsActionJustPressed("ui_cancel") && gameState.GetState() == GameStateComponent.GameState.GameOver)
             {
                 GetTree().Quit();
             }
+        }
+        #endregion
+
+        #region Game Restart
+        /// <summary>
+        /// Restart the game to initial state.
+        /// Resets all game state, clears and rebuilds brick grid, and resets entities.
+        /// GameStateComponent.Reset() triggers state transition → UIComponent auto-hides game over message.
+        /// </summary>
+        private void RestartGame()
+        {
+            GD.Print("=== RESTARTING GAME ===");
+
+            // Reset game state (score, lives, hit counts, flags, and state machine)
+            // StateChanged event will automatically trigger UIComponent to hide game over message
+            gameState.Reset();
+
+            // Reset physics (clears speed multiplier and velocity)
+            ballPhysics.ResetForGameRestart();
+
+            // Reset ball visual position and re-enable _Process()
+            ball.ResetForGameRestart();
+
+            // Reset paddle to initial state (size, position, speed multiplier)
+            paddle.ResetForGameRestart();
+
+            // Reset and rebuild brick grid
+            brickGrid.ResetForGameRestart(this);
+            brickGrid.InstantiateGrid(this);
+
+            GD.Print("Game restart complete");
         }
         #endregion
     }

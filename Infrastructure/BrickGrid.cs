@@ -93,6 +93,27 @@ namespace Breakout.Infrastructure
         /// Query remaining brick count.
         /// </summary>
         public int GetRemainingBrickCount() => brickGrid.Count;
+
+        /// <summary>
+        /// Reset grid for game restart.
+        /// Removes all existing bricks from scene and clears the grid.
+        /// Does NOT rebuild the grid (Controller will call InstantiateGrid again).
+        /// </summary>
+        public void ResetForGameRestart(Godot.Node parentNode)
+        {
+            // Remove all brick nodes from the scene
+            foreach (var brick in brickGrid.Values)
+            {
+                if (brick != null)
+                {
+                    brick.QueueFree();
+                }
+            }
+
+            // Clear the grid
+            brickGrid.Clear();
+            GD.Print("BrickGrid cleared for restart");
+        }
         #endregion
 
         #region Private Methods

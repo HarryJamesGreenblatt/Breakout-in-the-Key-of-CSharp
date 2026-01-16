@@ -145,6 +145,18 @@ namespace Breakout.Entities
             return physics;
         }
 
+        /// <summary>
+        /// Reset ball visual position for game restart.
+        /// Syncs the entity's Position with the physics component's position.
+        /// Re-enables the ball's _Process() so it can update physics.
+        /// </summary>
+        public void ResetForGameRestart()
+        {
+            Position = physics.GetPosition();
+            ProcessMode = Node.ProcessModeEnum.Inherit;  // Re-enable _Process()
+            GD.Print($"Ball reset visual position to {Position}, ProcessMode re-enabled");
+        }
+
         #endregion
     }
 }

@@ -215,6 +215,32 @@ namespace Breakout.Components
 
             GD.Print("Game Over message displayed");
         }
+
+        /// <summary>
+        /// Hides the game over message.
+        /// Called from OnGameStateChanged when state transitions to Playing.
+        /// </summary>
+        private void HideGameOverMessage()
+        {
+            if (gameOverLabel != null)
+            {
+                gameOverLabel.QueueFree();
+                gameOverLabel = null;
+                GD.Print("Game Over message hidden");
+            }
+        }
+
+        /// <summary>
+        /// Called when game state changes.
+        /// Hides game over message if transitioning back to Playing.
+        /// </summary>
+        public void OnGameStateChanged(GameStateComponent.GameState newState)
+        {
+            if (newState == GameStateComponent.GameState.Playing)
+            {
+                HideGameOverMessage();
+            }
+        }
         #endregion
     }
 }

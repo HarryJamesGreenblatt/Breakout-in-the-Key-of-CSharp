@@ -194,6 +194,37 @@ namespace Breakout.Entities
             inputEnabled = enabled;
         }
 
+        /// <summary>
+        /// Reset paddle to initial state for game restart.
+        /// Restores original size, resets position to center, and clears speed multiplier.
+        /// Uses Config values for initial state (config is the source of truth).
+        /// </summary>
+        public void ResetForGameRestart()
+        {
+            Position = Config.Paddle.Position;
+            size = Config.Paddle.Size;
+            speedMultiplier = 1f;
+            velocityX = 0f;
+            inputEnabled = true;
+
+            // Update visual
+            var visual = GetChild(1) as ColorRect;
+            if (visual != null)
+            {
+                visual.Size = size;
+            }
+
+            // Update collision shape
+            var collisionShape = GetChild(0) as CollisionShape2D;
+            if (collisionShape != null)
+            {
+                collisionShape.Shape = new RectangleShape2D { Size = size };
+                collisionShape.Position = size / 2;
+            }
+
+            GD.Print($"Paddle reset to initial state from Config");
+        }
+
         #endregion
     }
 }
