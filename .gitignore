@@ -8,6 +8,7 @@
 
 # Context/notes (local development reference)
 .context/
+.copilot-instructions.md
 
 # Visual Studio cache
 .vs/
