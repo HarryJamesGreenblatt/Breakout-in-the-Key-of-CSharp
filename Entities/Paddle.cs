@@ -225,6 +225,12 @@ namespace Breakout.Entities
             GD.Print($"Paddle reset to initial state from Config");
         }
 
+        /// <summary>
+        /// Get the target center position for transitions.
+        /// Exposes Config value for TransitionComponent to use.
+        /// </summary>
+        public Vector2 GetCenterPosition() => Config.Paddle.Position;
+
         #endregion
     }
 }

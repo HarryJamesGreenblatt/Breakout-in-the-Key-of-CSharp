@@ -36,7 +36,9 @@ namespace Breakout.Components
             Playing,
             GameOver,
             LevelComplete,
-            Paused
+            Paused,
+            Transitioning,  // Added for transition animations between game states
+            Continuing      // Added when continuing after game over (before transition)
         }
         #endregion
         #region State
@@ -93,8 +95,9 @@ namespace Breakout.Components
 
         /// <summary>
         /// Current game flow state.
+        /// Starts in Transitioning state so initial transition plays before gameplay.
         /// </summary>
-        private GameState currentState = GameState.Playing;
+        private GameState currentState = GameState.Transitioning;
 
         /// <summary>
         /// Continue countdown timer (seconds remaining).
@@ -363,8 +366,42 @@ namespace Breakout.Components
         }
 
         /// <summary>
+        /// Enter the Transitioning state.
+        /// Called when starting transition animations (game start, restart, level change).
+        /// </summary>
+        public void EnterTransitionState()
+        {
+            currentState = GameState.Transitioning;
+            StateChanged?.Invoke(currentState);
+            GD.Print("GameState: Entering Transitioning state");
+        }
+
+        /// <summary>
+        /// Exit Transitioning state and enter Playing state.
+        /// Called when transition animations complete.
+        /// </summary>
+        public void EnterPlayingState()
+        {
+            currentState = GameState.Playing;
+            StateChanged?.Invoke(currentState);
+            GD.Print("GameState: Entering Playing state");
+        }
+
+        /// <summary>
+        /// Enter the Continuing state.
+        /// Called when player selects continue after game over (blocks sound effects during reset).
+        /// </summary>
+        public void EnterContinuingState()
+        {
+            currentState = GameState.Continuing;
+            StateChanged?.Invoke(currentState);
+            GD.Print("GameState: Entering Continuing state");
+        }
+
+        /// <summary>
         /// Reset all game state to initial values.
         /// Called when restarting the game.
+        /// Does NOT emit LivesChanged to avoid triggering sound effects during restart.
         /// </summary>
         public void Reset()
         {
@@ -381,7 +418,7 @@ namespace Breakout.Components
             continueCountdownRemaining = 0f;
 
             ScoreChanged?.Invoke(score);
-            LivesChanged?.Invoke(lives);
+            // Don't emit LivesChanged - would trigger decrement sound during restart
             StateChanged?.Invoke(currentState);  // Notify listeners (e.g., UIComponent) of state transition
             GD.Print("GameState reset to initial values");
         }

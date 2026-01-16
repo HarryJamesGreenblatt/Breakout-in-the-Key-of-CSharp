@@ -91,8 +91,12 @@ namespace Breakout.Utilities
             gameState.SpeedIncreaseRequired += (_) => sound.PlaySpeedIncrease();
             gameState.PaddleShrinkRequired += sound.PlayPaddleShrinkEffect;
             gameState.LivesChanged += (lives) => {
-                if (lives > 0) sound.PlayLivesDecremented();
-                else if (lives <= 0) sound.PlayGameOver();
+                // Only play sounds if not in Continuing state (restart in progress)
+                if (gameState.GetState() != GameStateComponent.GameState.Continuing)
+                {
+                    if (lives > 0) sound.PlayLivesDecremented();
+                    else if (lives <= 0) sound.PlayGameOver();
+                }
             };
         }
 
@@ -102,8 +106,27 @@ namespace Breakout.Utilities
         public static void WireGameOverState(GameStateComponent gameState, Ball ball, Paddle paddle)
         {
             gameState.GameOver += () => {
+                ball.Visible = false;  // Hide ball during game over screen
                 ball.ProcessMode = Node.ProcessModeEnum.Disabled;
                 paddle.SetInputEnabled(false);
+            };
+        }
+
+        /// <summary>
+        /// Wire state changes to control input during transitions.
+        /// Disables paddle input during Transitioning state, re-enables during Playing state.
+        /// </summary>
+        public static void WireTransitionState(GameStateComponent gameState, Paddle paddle)
+        {
+            gameState.StateChanged += (state) => {
+                if (state == GameStateComponent.GameState.Transitioning)
+                {
+                    paddle.SetInputEnabled(false);
+                }
+                else if (state == GameStateComponent.GameState.Playing)
+                {
+                    paddle.SetInputEnabled(true);
+                }
             };
         }
     }

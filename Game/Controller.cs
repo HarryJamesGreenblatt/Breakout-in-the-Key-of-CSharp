@@ -23,10 +23,12 @@ namespace Breakout.Game
     {
         #region State
         private GameStateComponent gameState;
+        private TransitionComponent transitionComponent;
         private BrickGrid brickGrid;
         private Paddle paddle;
         private Ball ball;
         private PhysicsComponent ballPhysics;
+        private SoundComponent soundComponent;
         #endregion
 
         #region Game Loop
@@ -35,7 +37,9 @@ namespace Breakout.Game
             // Instantiate all components and entities
             var entityFactory = new EntityFactoryUtility();
             gameState = entityFactory.CreateGameState();
-            brickGrid = entityFactory.CreateBrickGrid(this);
+            transitionComponent = new TransitionComponent();
+            AddChild(transitionComponent);
+            brickGrid = entityFactory.CreateBrickGrid(this, startInvisible: true);  // Start invisible for initial transition
             paddle = entityFactory.CreatePaddle(this);
             (ball, ballPhysics) = entityFactory.CreateBallWithPhysics(this);
             entityFactory.CreateWalls(this);
@@ -43,7 +47,7 @@ namespace Breakout.Game
             var uiComponent = new UIComponent();
             AddChild(uiComponent);
 
-            var soundComponent = new SoundComponent();
+            soundComponent = new SoundComponent();
             AddChild(soundComponent);
 
             // Wire all signals via utility (clean separation)
@@ -54,11 +58,28 @@ namespace Breakout.Game
             SignalWiringUtility.WireBallSoundEvents(ball, ballPhysics, soundComponent);
             SignalWiringUtility.WireGameStateSoundEvents(gameState, soundComponent);
             SignalWiringUtility.WireGameOverState(gameState, ball, paddle);
+            SignalWiringUtility.WireTransitionState(gameState, paddle);
+
+            // Wire transition events
+            transitionComponent.TransitionComplete += () => 
+            {
+                ball.ProcessMode = Node.ProcessModeEnum.Inherit;  // Re-enable ball physics
+                soundComponent.PlayBallLaunch();  // Play launch sound when ball starts moving
+                gameState.EnterPlayingState();
+            };
+            ball.BallBlip += () => soundComponent.PlayBallBlip();
 
             // When continue countdown expires, quit the game (same as ESC)
             gameState.ContinueCountdownExpired += () => GetTree().Quit();
 
-            GD.Print("Controller initialized: entities created, signals wired");
+            // Start game with transition animation
+            // Hide ball and disable physics until it blips in during transition
+            ball.Visible = false;
+            ball.ProcessMode = Node.ProcessModeEnum.Disabled;
+            gameState.EnterTransitionState();
+            transitionComponent.PlayGameStartTransition(paddle, ball, brickGrid);
+
+            GD.Print("Controller initialized: entities created, signals wired, game start transition playing");
         }
 
         public override void _Process(double delta)
@@ -85,32 +106,47 @@ namespace Breakout.Game
 
         #region Game Restart
         /// <summary>
-        /// Restart the game to initial state.
-        /// Resets all game state, clears and rebuilds brick grid, and resets entities.
-        /// GameStateComponent.Reset() triggers state transition → UIComponent auto-hides game over message.
+        /// Restart the game with smooth transitions.
+        /// Sequence:
+        /// 1. Enter Continuing state (blocks sound effects during reset)
+        /// 2. Reset game state and physics immediately
+        /// 3. Reset entities to initial positions (instant for ball/paddle state)
+        /// 4. Rebuild brick grid (invisible initially)
+        /// 5. Enter Transitioning state and play animations (bricks fade, paddle eases, ball blips)
+        /// 6. Transition completes → enter Playing state
         /// </summary>
         private void RestartGame()
         {
             GD.Print("=== RESTARTING GAME ===");
 
-            // Reset game state (score, lives, hit counts, flags, and state machine)
+            // Enter continuing state (blocks sound effects during reset)
+            gameState.EnterContinuingState();
+
+            // Reset game state (score, lives, hit counts, flags)
             // StateChanged event will automatically trigger UIComponent to hide game over message
             gameState.Reset();
 
             // Reset physics (clears speed multiplier and velocity)
             ballPhysics.ResetForGameRestart();
 
-            // Reset ball visual position and re-enable _Process()
+            // Reset ball to initial position (instant, will blip in later)
+            // Keep ball disabled during transition - will re-enable when transition completes
             ball.ResetForGameRestart();
+            ball.Visible = false;  // Hide until blip
+            ball.ProcessMode = Node.ProcessModeEnum.Disabled;
 
-            // Reset paddle to initial state (size, position, speed multiplier)
+            // Reset paddle state (will ease to center during transition)
             paddle.ResetForGameRestart();
 
-            // Reset and rebuild brick grid
+            // Reset and rebuild brick grid (invisible initially for fade-in)
             brickGrid.ResetForGameRestart(this);
-            brickGrid.InstantiateGrid(this);
+            brickGrid.InstantiateGrid(this, startInvisible: true);
 
-            GD.Print("Game restart complete");
+            // Enter transitioning state and play animation sequence
+            gameState.EnterTransitionState();
+            transitionComponent.PlayRestartTransition(paddle, ball, brickGrid);
+
+            GD.Print("Restart transition started");
         }
         #endregion
     }

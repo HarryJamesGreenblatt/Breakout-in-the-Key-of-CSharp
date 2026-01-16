@@ -52,7 +52,9 @@ namespace Breakout.Infrastructure
         /// Instantiates the brick grid.
         /// Called by factory during setup.
         /// </summary>
-        public void InstantiateGrid(Godot.Node parentNode)
+        /// <param name="parentNode">Parent node to add bricks to</param>
+        /// <param name="startInvisible">If true, bricks start invisible (for transitions)</param>
+        public void InstantiateGrid(Godot.Node parentNode, bool startInvisible = false)
         {
             int brickId = 0;
             Vector2 gridStart = Breakout.Game.Config.BrickGrid.GridStartPosition;
@@ -73,6 +75,13 @@ namespace Breakout.Infrastructure
 
                     // Create and add brick to the scene
                     var brick = new Brick(brickId, position, Breakout.Game.Config.Brick.Size, colorConfig.VisualColor);
+                    
+                    // Set invisible if requested (for transitions)
+                    if (startInvisible)
+                    {
+                        brick.SetInvisible();
+                    }
+                    
                     parentNode.AddChild(brick);
 
                     // Store brick in the dictionary
@@ -86,13 +95,19 @@ namespace Breakout.Infrastructure
             }
 
             GridInstantiated?.Invoke(brickId);
-            GD.Print($"Brick grid instantiated: {brickId} bricks");
+            GD.Print($"Brick grid instantiated: {brickId} bricks (startInvisible: {startInvisible})");
         }
 
         /// <summary>
         /// Query remaining brick count.
         /// </summary>
         public int GetRemainingBrickCount() => brickGrid.Count;
+
+        /// <summary>
+        /// Get all bricks currently in the grid.
+        /// Exposes brick collection for TransitionComponent to animate.
+        /// </summary>
+        public IEnumerable<Brick> GetAllBricks() => brickGrid.Values;
 
         /// <summary>
         /// Reset grid for game restart.

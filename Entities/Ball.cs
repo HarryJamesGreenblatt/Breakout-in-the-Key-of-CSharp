@@ -40,6 +40,13 @@ namespace Breakout.Entities
         /// </summary>
         [Signal]
         public delegate void BallHitCeilingEventHandler();
+
+        /// <summary>
+        /// Triggered when the ball blips in during transition.
+        /// Signals SoundComponent to play blip sound effect.
+        /// </summary>
+        [Signal]
+        public delegate void BallBlipEventHandler();
         #endregion
 
         #region State
@@ -155,6 +162,23 @@ namespace Breakout.Entities
             Position = physics.GetPosition();
             ProcessMode = Node.ProcessModeEnum.Inherit;  // Re-enable _Process()
             GD.Print($"Ball reset visual position to {Position}, ProcessMode re-enabled");
+        }
+
+        /// <summary>
+        /// Blip the ball in during transition (instant appearance with sound).
+        /// Makes the ball visible and emits signal for sound effect.
+        /// Called at the end of transition sequence.
+        /// </summary>
+        public void BlipIn()
+        {
+            // Make ball visible (appears at center)
+            Visible = true;
+            Modulate = new Color(1f, 1f, 1f, 1f);
+
+            // Emit signal for sound effect
+            EmitSignal(SignalName.BallBlip);
+
+            GD.Print("Ball blipped in");
         }
 
         #endregion

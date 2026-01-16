@@ -61,11 +61,12 @@ namespace Breakout.Utilities
         /// Create the brick grid infrastructure component and instantiate all bricks in the scene.
         /// </summary>
         /// <param name="parent">Parent node to attach bricks to.</param>
+        /// <param name="startInvisible">If true, bricks start invisible (for transitions).</param>
         /// <returns>Instantiated BrickGrid.</returns>
-        public BrickGrid CreateBrickGrid(Node parent)
+        public BrickGrid CreateBrickGrid(Node parent, bool startInvisible = false)
         {
             var brickGrid = new BrickGrid();
-            brickGrid.InstantiateGrid(parent);
+            brickGrid.InstantiateGrid(parent, startInvisible);
             return brickGrid;
         }
 

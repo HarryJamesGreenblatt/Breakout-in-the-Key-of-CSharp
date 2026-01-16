@@ -79,6 +79,15 @@ namespace Breakout.Entities
             EmitSignal(SignalName.BrickDestroyed, brickId);
             QueueFree();
         }
+
+        /// <summary>
+        /// Set the brick to be initially invisible (for transition setup).
+        /// Called by BrickGrid before adding to scene, then TransitionComponent handles fade in.
+        /// </summary>
+        public void SetInvisible()
+        {
+            Modulate = new Color(Modulate.R, Modulate.G, Modulate.B, 0f);
+        }
         #endregion
 
     }

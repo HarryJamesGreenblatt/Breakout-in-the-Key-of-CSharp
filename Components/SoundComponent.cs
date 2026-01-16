@@ -104,6 +104,8 @@ namespace Breakout.Components
                 { "LivesDecremented", new SoundPreset(400f, 0.35f, 0.05f, 0.25f, 0.5f, WaveformType.Square, -600f) },  // Low ominous down-sweep
                 { "GameOver", new SoundPreset(300f, 0.55f, 0.05f, 0.35f, 0.55f, WaveformType.Square, -800f) },         // Very low defeat tone
                 { "WallBounce", new SoundPreset(1000f, 0.08f, 0.005f, 0.05f, 0.35f, WaveformType.Square, 50f) },       // Quick pop with slight rise
+                { "BallBlip", new SoundPreset(1800f, 0.08f, 0.002f, 0.04f, 0.5f, WaveformType.Square, -300f) },        // Sharp blip for ball appearance
+                { "BallLaunch", new SoundPreset(1500f, 0.1f, 0.005f, 0.06f, 0.5f, WaveformType.Square, -250f) },       // Launch tone when ball starts
                 // Cracking noise: harsh noise burst for polyphonic layering
                 { "Crack", new SoundPreset(0f, 0.035f, 0.001f, 0.025f, 0.4f, WaveformType.Noise, 0f) }                // Very brief noise burst
             };
@@ -144,6 +146,7 @@ namespace Breakout.Components
         public void PlayBrickDestroyed() => PlaySound(soundPresets["BrickDestroyed"]);
         public void PlaySpeedIncrease() => PlaySound(soundPresets["SpeedIncrease"]);
         public void PlayPaddleShrink() => PlaySound(soundPresets["PaddleShrink"]);
+        public void PlayBallBlip() => PlaySound(soundPresets["BallBlip"]);
         public void PlayPaddleShrinkEffect()
         {
             // Play "gaw gaw gaw" effect: 3 rapid descending tones
@@ -160,6 +163,7 @@ namespace Breakout.Components
         public void PlayLivesDecremented() => PlaySound(soundPresets["LivesDecremented"]);
         public void PlayGameOver() => PlaySound(soundPresets["GameOver"]);
         public void PlayWallBounce() => PlaySound(soundPresets["WallBounce"]);
+        public void PlayBallLaunch() => PlaySound(soundPresets["BallLaunch"]);
         #endregion
 
         #region Private - Audio Synthesis (Godot 4.5 API)
