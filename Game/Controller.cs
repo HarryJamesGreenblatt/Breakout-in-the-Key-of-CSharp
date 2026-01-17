@@ -79,6 +79,9 @@ namespace Breakout.Game
             // When continue countdown expires, quit the game (same as ESC)
             gameState.ContinueCountdownExpired += () => GetTree().Quit();
 
+            // Level complete handling (advance to next level with transition)
+            gameState.LevelComplete += AdvanceLevel;
+
             // Start game with transition animation
             // Hide ball and disable physics until it blips in during transition
             ball.Visible = false;
@@ -166,6 +169,41 @@ namespace Breakout.Game
             transitionComponent.PlayRestartTransition(paddle, ball, brickGrid);
 
             GD.Print("Restart transition started");
+        }
+
+        /// <summary>
+        /// Advance to the next level when all bricks are destroyed.
+        /// Uses the same transition flow as restart (bricks fade, paddle eases, ball blips),
+        /// but preserves score and lives.
+        /// </summary>
+        private void AdvanceLevel()
+        {
+            GD.Print("=== LEVEL COMPLETE → ADVANCING LEVEL ===");
+
+            // Freeze ball and input while transitioning
+            ball.Visible = false;
+            ball.ProcessMode = Node.ProcessModeEnum.Disabled;
+            paddle.SetInputEnabled(false);
+
+            // Reset per-level rules and physics (keep score/lives)
+            gameState.ResetForNextLevel();
+            ballPhysics.ResetForGameRestart();
+
+            // Reset ball and paddle state (positions will animate during transition)
+            ball.ResetForGameRestart();
+            ball.Visible = false;  // Hide until blip
+            ball.ProcessMode = Node.ProcessModeEnum.Disabled;
+            paddle.ResetForGameRestart();
+
+            // Rebuild brick grid for the next level (all bricks fade in)
+            brickGrid.ResetForGameRestart(this);
+            brickGrid.InstantiateGrid(this, startInvisible: true);
+
+            // Enter transitioning state and play level-complete transition
+            gameState.EnterTransitionState();
+            transitionComponent.PlayLevelCompleteTransition(paddle, ball, brickGrid);
+
+            GD.Print("Level complete transition started");
         }
         #endregion
     }

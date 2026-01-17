@@ -21,12 +21,34 @@ namespace Breakout.Components
     /// </summary>
     public partial class TransitionComponent : Node
     {
+        #region State
+        private List<Tween> activeTweens = new();
+        #endregion
+
         #region Events
         /// <summary>
         /// Emitted when all transition animations complete.
         /// Signals that the game can transition from Transitioning → Playing state.
         /// </summary>
         public event Action TransitionComplete;
+        #endregion
+
+        #region Lifecycle
+        /// <summary>
+        /// Clean up active tweens when component is removed from tree.
+        /// Prevents ObjectDB leak warnings on exit.
+        /// </summary>
+        public override void _ExitTree()
+        {
+            foreach (var tween in activeTweens)
+            {
+                if (tween != null && IsInstanceValid(tween))
+                {
+                    tween.Kill();
+                }
+            }
+            activeTweens.Clear();
+        }
         #endregion
 
         #region Transition Methods
@@ -124,9 +146,11 @@ namespace Breakout.Components
                 }
                 
                 var tween = CreateTween();
+                activeTweens.Add(tween);
                 tween.SetEase(Tween.EaseType.InOut);
                 tween.SetTrans(Tween.TransitionType.Quad);
                 tween.TweenProperty(brick, "modulate:a", 1f, duration);
+                tween.Finished += () => activeTweens.Remove(tween);
             }
             GD.Print($"Fading in bricks over {duration}s");
         }
@@ -140,9 +164,11 @@ namespace Breakout.Components
             Vector2 targetPosition = paddle.GetCenterPosition();
             
             var tween = CreateTween();
+            activeTweens.Add(tween);
             tween.SetEase(Tween.EaseType.InOut);
             tween.SetTrans(Tween.TransitionType.Quad);
             tween.TweenProperty(paddle, "position", targetPosition, duration);
+            tween.Finished += () => activeTweens.Remove(tween);
             
             GD.Print($"Paddle easing to center: {targetPosition} over {duration}s");
         }

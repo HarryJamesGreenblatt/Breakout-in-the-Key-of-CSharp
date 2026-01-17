@@ -438,7 +438,13 @@ namespace Breakout.Components
             paddleHasShrunk = false;
             redRowBroken = false;
             continueCountdownRemaining = 0f;
-            autoPlayEnabled = false;  // Disable auto-play on restart
+
+            // Disable auto-play on restart (emit event so paddle restores size/position if it was enabled)
+            if (autoPlayEnabled)
+            {
+                autoPlayEnabled = false;
+                AutoPlayToggled?.Invoke(false);
+            }
 
             ScoreChanged?.Invoke(score);
             // Emit LivesChanged so UI updates, but we remain in Continuing state
@@ -446,6 +452,31 @@ namespace Breakout.Components
             LivesChanged?.Invoke(lives);
             StateChanged?.Invoke(currentState);  // Notify listeners (e.g., UIComponent) of state transition
             GD.Print("GameState reset to initial values");
+        }
+
+        /// <summary>
+        /// Reset state for advancing to the next level.
+        /// Keeps score and lives, but clears per-level rules and milestones.
+        /// </summary>
+        public void ResetForNextLevel()
+        {
+            totalHits = 0;
+            speedMilestone4Applied = false;
+            speedMilestone12Applied = false;
+            speedOrangeRowApplied = false;
+            speedRedRowApplied = false;
+            paddleHasShrunk = false;
+            redRowBroken = false;
+            continueCountdownRemaining = 0f;
+
+            // Disable auto-play when advancing levels to keep gameplay canonical
+            if (autoPlayEnabled)
+            {
+                autoPlayEnabled = false;
+                AutoPlayToggled?.Invoke(false);
+            }
+
+            GD.Print("GameState reset for next level (score/lives preserved)");
         }
         #endregion
     }
