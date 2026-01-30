@@ -200,7 +200,7 @@ This project implements patterns from Robert Nystrom's [Game Programming Pattern
 
 - **Godot 4.5 Documentation:** https://docs.godotengine.org/en/4.5/
 - **Game Programming Patterns:** https://gameprogrammingpatterns.com/
-- **Development Log:** See [.context/OBJECTIVE_1_1_DEVLOG.md](.context/OBJECTIVE_1_1_DEVLOG.md) for detailed implementation history
+- **Development Log:** See [DEVLOG.md](DEVLOG.md) for detailed implementation history
 
 ---
 
